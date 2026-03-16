@@ -1,0 +1,54 @@
+# Default: let Git normalise line endings for text it detects.
+* text=auto
+
+# ---------------------------------------------------------------------------
+# Altium Designer
+# ---------------------------------------------------------------------------
+# .SchDoc / .PcbDoc / .SchLib / .PcbLib are OLE compound (binary) documents.
+# Without these rules Git would treat them as text, apply CRLF/LF conversion and
+# attempt three-way merges, which silently corrupts the files. This matters here
+# because Altium runs on the Windows host while this repository lives in WSL.
+*.SchDoc  binary
+*.PcbDoc  binary
+*.SchLib  binary
+*.PcbLib  binary
+*.PcbFab  binary
+*.PcbAsm  binary
+*.Harness binary
+
+# Altium project files are INI-style text, authored on Windows.
+*.PrjPcb  text eol=crlf
+*.OutJob  text eol=crlf
+
+# ---------------------------------------------------------------------------
+# Fabrication and CAD exports (committed: they are the hardware deliverable)
+# ---------------------------------------------------------------------------
+*.step binary
+*.stp  binary
+*.stl  binary
+*.f3d  binary
+*.dxf  binary
+*.zip  binary
+
+# Gerber and drill files are plain text but must never be line-ending mangled,
+# because fabrication tooling is picky about them.
+*.gbr text eol=lf
+*.drl text eol=lf
+
+# ---------------------------------------------------------------------------
+# Firmware sources: always LF, regardless of the host checking them out
+# ---------------------------------------------------------------------------
+*.c   text eol=lf
+*.h   text eol=lf
+*.txt text eol=lf
+*.md  text eol=lf
+*.py  text eol=lf
+*.sh  text eol=lf
+sdkconfig.defaults text eol=lf
+
+# ---------------------------------------------------------------------------
+# Documentation assets
+# ---------------------------------------------------------------------------
+*.png binary
+*.jpg binary
+*.pdf binary
