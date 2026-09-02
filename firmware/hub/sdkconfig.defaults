@@ -1,0 +1,98 @@
+# OmniSensor hub — ESP32-C6, Matter over Thread, Intermittently Connected Device (SED).
+#
+# Merged from esp-matter examples/sensors (Matter/partition/BLE basics) and
+# examples/icd_app (Thread MTD + ICD + light-sleep power management).
+# See docs/SETUP.md and project_description.md §6.
+
+CONFIG_IDF_TARGET="esp32c6"
+CONFIG_ESPTOOLPY_FLASHSIZE_4MB=y
+
+# --- Commissioning over BLE -------------------------------------------------
+CONFIG_BT_ENABLED=y
+CONFIG_BT_NIMBLE_ENABLED=y
+CONFIG_BT_NIMBLE_ENABLE_CONN_REATTEMPT=n
+CONFIG_BT_LE_SLEEP_ENABLE=y
+CONFIG_BT_LE_LP_CLK_SRC_MAIN_XTAL=y
+
+# --- Partition table --------------------------------------------------------
+CONFIG_PARTITION_TABLE_CUSTOM=y
+CONFIG_PARTITION_TABLE_FILENAME="partitions.csv"
+CONFIG_PARTITION_TABLE_OFFSET=0xC000
+
+# --- Thread (MTD: a sleepy end device is never a router) --------------------
+CONFIG_OPENTHREAD_ENABLED=y
+CONFIG_OPENTHREAD_MTD=y
+CONFIG_OPENTHREAD_SRP_CLIENT=y
+CONFIG_OPENTHREAD_LOG_LEVEL_DYNAMIC=n
+CONFIG_OPENTHREAD_LOG_LEVEL_NOTE=y
+CONFIG_OPENTHREAD_CLI=n
+
+# Thread only — no Wi-Fi station, no SoftAP.
+CONFIG_ENABLE_WIFI_STATION=n
+CONFIG_ESP_WIFI_SOFTAP_SUPPORT=n
+
+# --- lwIP: IPv6 only --------------------------------------------------------
+CONFIG_LWIP_IPV6_AUTOCONFIG=n
+CONFIG_LWIP_IPV6_NUM_ADDRESSES=8
+CONFIG_LWIP_MULTICAST_PING=y
+CONFIG_LWIP_ND6=n
+CONFIG_LWIP_IPV4=n
+CONFIG_DISABLE_IPV4=y
+CONFIG_USE_MINIMAL_MDNS=n
+
+# --- Crypto -----------------------------------------------------------------
+CONFIG_MBEDTLS_HKDF_C=y
+CONFIG_MBEDTLS_SSL_PROTO_DTLS=y
+
+# --- Power management -------------------------------------------------------
+# The hub sleeps in LIGHT sleep, not deep sleep: deep sleep tears down the
+# Thread stack and drops the device off the mesh. See project_description.md §6.
+CONFIG_PM_ENABLE=y
+CONFIG_PM_DFS_INIT_AUTO=y
+# Powering the peripheral domain down in light sleep disables GPIO wakeup, and
+# the PIR wake is the entire point of this device. Keeping the domain alive
+# costs sleep current; losing the wake source costs the feature.
+CONFIG_PM_POWER_DOWN_PERIPHERAL_IN_LIGHT_SLEEP=n
+CONFIG_ESP_SLEEP_POWER_DOWN_FLASH=y
+CONFIG_ESP_PHY_MAC_BB_PD=y
+CONFIG_FREERTOS_HZ=1000
+CONFIG_FREERTOS_USE_TICKLESS_IDLE=y
+# Note: CONFIG_PM_SLP_DISABLE_GPIO cannot be turned off here. On the C6,
+# ESP_SLEEP_GPIO_RESET_WORKAROUND defaults on for a documented ESD erratum and
+# selects it, and a select cannot be overridden. The radar pins are exempted
+# individually with gpio_sleep_sel_dis() instead — see drivers/ld2420.c.
+CONFIG_IEEE802154_SLEEP_ENABLE=y
+
+# --- Matter ICD (Sleepy End Device) ----------------------------------------
+CONFIG_ENABLE_ICD_SERVER=y
+CONFIG_ICD_FAST_POLL_INTERVAL_MS=500
+CONFIG_ICD_IDLE_MODE_INTERVAL_SEC=60
+CONFIG_ICD_ACTIVE_MODE_INTERVAL_MS=1000
+CONFIG_ICD_ACTIVE_MODE_THRESHOLD_MS=1000
+
+# --- Matter data model ------------------------------------------------------
+# 5 sensor endpoints (temperature, humidity, illuminance, air quality, occupancy)
+# plus headroom. The Power Source cluster lives on the root node, not its own endpoint.
+CONFIG_ESP_MATTER_MAX_DYNAMIC_ENDPOINT_COUNT=6
+CONFIG_ENABLE_OTA_REQUESTOR=y
+CONFIG_SUPPORT_GROUPCAST_CLUSTER=n
+
+# --- Task watchdog ----------------------------------------------------------
+# Do not watch the idle task. With tickless idle and light sleep the CPU is
+# genuinely asleep for long stretches, so the idle task cannot feed the
+# watchdog and every sleep window looks like a hang. The application tasks
+# subscribe themselves instead, which is what we actually want watched.
+# The timeout allows for the SCD41's ~5 s blocking single shot.
+CONFIG_ESP_TASK_WDT_CHECK_IDLE_TASK_CPU0=n
+CONFIG_ESP_TASK_WDT_TIMEOUT_S=10
+
+# --- Button (GPIO1 factory reset) ------------------------------------------
+# Power-save support is a runtime flag on button v4 (enable_power_save in
+# button_gpio_config_t), not a Kconfig symbol.
+CONFIG_BUTTON_PERIOD_TIME_MS=20
+CONFIG_BUTTON_LONG_PRESS_TIME_MS=5000
+
+# --- Console ----------------------------------------------------------------
+# The XIAO logs over the native USB-Serial/JTAG peripheral. This is now a
+# correctness requirement, not a convenience: UART1 belongs to the LD2420.
+CONFIG_ESP_CONSOLE_USB_SERIAL_JTAG=y
