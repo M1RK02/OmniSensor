@@ -1,33 +1,49 @@
 # OmniSensor — Milestones
 
-Project deadline: **31 August 2026**.
+Project deadline: **8 September 2026, end of day.**
 
-These four milestones mirror the GitHub Milestones on the repository. Each has a due date and a task
-checklist grouped by discipline.
+> **Schedule re-baselined on 2 September 2026.** The original plan targeted 31 August with a seven-day
+> stability test. That date passed with Milestones 2–4 unstarted, so the remaining work has been
+> replanned into the seven days that actually exist rather than left as a plan that no longer describes
+> reality. The stability test is the visible casualty: it is now roughly 40 hours, not 7 days, and is
+> reported as measured elapsed time. The original document's own policy applies — *a truthful 4-day
+> result is worth more than a padded one.*
 
 | # | Milestone | Due | Status |
 |---|---|---|---|
 | 1 | [Procurement & Standalone Validation](#milestone-1--procurement--standalone-validation) | 2026-04-20 | ✅ Complete |
-| 2 | [Hardware Design & Power Management](#milestone-2--hardware-design--power-management) | 2026-08-06 | ⏳ In progress |
-| 3 | [Matter Integration & Advanced UI](#milestone-3--matter-integration--advanced-ui) | 2026-08-19 | ⬜ Not started |
-| 4 | [Final Assembly, Testing & Release](#milestone-4--final-assembly-testing--release) | 2026-08-31 | ⬜ Not started |
+| 2 | [Integrated Firmware & Power Management](#milestone-2--integrated-firmware--power-management) | 2026-09-04 | ⏳ In progress |
+| 3 | [Matter Integration](#milestone-3--matter-integration) | 2026-09-05 | ⏳ Commissioned 2 Sep |
+| 4 | [Hardware Design, Assembly & Release](#milestone-4--hardware-design-assembly--release) | 2026-09-08 | ⬜ Not started |
 
 ## Critical path
 
-The PCB is a **design deliverable only** — it is designed in Altium but never fabricated, and the working
-unit is hand-wired. That removes board fabrication and shipping from the schedule entirely, so nothing
-here waits on a supplier.
+The PCB is a **design deliverable only** — designed in Altium, never fabricated — so nothing waits on a
+supplier. Two things genuinely gate the deadline:
 
-The binding constraint is instead the **7-day stability test** in Milestone 4. To report a full week of
-uptime by 31 August, it must start no later than **23 August**. That is what sets Milestone 3's due date
-of 19 August — four days of buffer before the test has to begin.
+1. **The enclosure print.** Modelling finishes Friday 4 September and the print starts that evening,
+   leaving Saturday as slack for exactly one reprint. Assembly is Sunday.
+2. **The stability run.** It must start Sunday 6 September evening to report ~40 hours by Tuesday.
 
-**If Milestone 3 slips past 23 August:** run the stability test for whatever time remains and report the
-actual elapsed duration honestly, rather than delaying the release. A truthful 4-day result is worth more
-than a padded one.
+**If the print slips past Saturday:** run the stability test on the bare wired unit and photograph the
+case separately. The case is a deliverable; running *inside* the case for 40 hours is not.
 
-Enclosure printing is scheduled early in Milestone 4 (20–22 August) so that a failed print has room for a
-second attempt without touching the deadline.
+**If Matter commissioning has not succeeded by end of Saturday:** ship the integrated non-Matter hub and
+document the blocker. Everything else in Milestone 2 still lands.
+
+## Scope changes made at re-baseline
+
+Recorded rather than quietly dropped:
+
+- **Matter scope reduced** to "commission successfully once, against one controller, with all five
+  measurements live". Multi-ecosystem verification, exposing the three distance zones over Matter, and
+  the per-gate radar calibration routine are documented as future work.
+- **No LiPo cell** — the battery did not arrive. The divider and load switch are still built and
+  measured; the device runs from USB-C. Battery life is reported as an arithmetic projection from the
+  measured 3V3-rail current, explicitly labelled as a projection, not a measurement.
+- **Sensor rail scope corrected.** The load switch now feeds the LD2420 only; the SCD41 is parked with
+  its own `power_down` command instead. See `docs/HARDWARE_DESIGN.md` §2 for why the original
+  everything-on-one-rail design could not work with the OLED on the always-on bus.
 
 ---
 
@@ -55,99 +71,106 @@ second attempt without touching the deadline.
 
 ---
 
-## Milestone 2 — Hardware Design & Power Management
+## Milestone 2 — Integrated Firmware & Power Management
 
-**Due 2026-08-06 · ⏳ In progress**
+**Due 2026-09-04 · ⏳ In progress**
 
-> **Goal:** produce the complete PCB design, build the power hardware on the wired prototype, and
-> implement the low-power multitasking firmware — with the sleep current actually measured.
+> **Goal:** turn the `all` example's monolith into the real `firmware/hub/` application — task
+> architecture, load switching, battery sensing — and build the power hardware on the wired prototype.
 
-### Hardware — design (Altium, not fabricated)
-- [ ] Draw the electrical schematic including the SI2301 load switch and the ADC divider
-- [ ] Specify external I²C pull-ups and per-device decoupling
-- [ ] Route the PCB, separating the XIAO heat source from the SHT40 and SCD41
-- [ ] Add copper relief slots around the temperature and humidity sensors
-- [ ] Export gerbers to `hardware/gerbers/` and a schematic PDF to `hardware/pdf/`
+### Firmware — 2–3 September
+- [x] Scaffold `firmware/hub/` on ESP-Matter, ESP32-C6 target, ICD/light-sleep configuration
+- [x] Verify the ESP-Matter toolchain builds for `esp32c6`
+- [x] Extract per-device drivers out of the examples into `main/drivers/`
+- [x] **Move the radar off `UART_NUM_0`** — closes `project_description.md` §17.1
+- [x] Resolve the three unassigned GPIOs — closes `project_description.md` §17.2
+- [x] Single-writer event queue and the task priority split from `project_description.md` §8
+- [x] GPIO load-switch control with fail-safe-OFF ordering
+- [x] Battery ADC with `adc_oneshot` + curve-fitting calibration and 32× multisampling
+- [x] Sample the battery *before* the radio starts, to keep RF noise off the ADC
+- [x] Enforce a minimum interval between SCD41 measurements — closes `project_description.md` §17.6
+- [x] Flash and validate on the wired prototype
 
-### Hardware — wired prototype (built)
-- [ ] Wire the SI2301 P-MOSFET rail cut, with the external gate pull-up (fail-safe OFF)
+### Hardware — wired prototype, 3 September
+- [ ] Wire the SI2301 rail cut with the external gate pull-up (fail-safe OFF)
 - [ ] Fit the 100 µF+ bulk capacitor on the switched rail
 - [ ] Wire the 2× 100 kΩ battery divider with the 100 nF stabilising capacitor
 - [ ] Document the wiring in `hardware/prototype/` with a signal table and photos
 
-### Firmware
-- [ ] Implement the FreeRTOS task architecture with the priority split from `project_description.md` §8
-- [ ] Implement RTC shared memory for instant UI refresh on wake
-- [ ] Implement GPIO load-switch control, cutting the sensor rail before deep sleep
-- [ ] Implement the ADC battery task using `esp_adc_cal` and 32–64× multisampling
-- [ ] Sample the battery *before* enabling the Thread radio, to avoid RF noise on the ADC
-- [ ] Implement the physical button handler for manual wake and Matter factory reset
-- [ ] **Move the radar off `UART_NUM_0`** — it currently collides with the log console
-      (see `project_description.md` §17)
-
-### Measurement
-- [ ] Measure deep-sleep current with the sensor rail off; record against the ~7–10 µA target
-- [ ] Verify the divider reading against a multimeter across the LiPo range
-- [ ] Record both results in `docs/HARDWARE_DESIGN.md`
-
-### Design
-- [ ] Model the 3D enclosure with the PIR lens holder and flush mmWave mounting points
-- [ ] Size the internal volume for cabling rather than a flat PCBA
+### Measurement — 5 September
+- [ ] Measure 3V3-rail current, radar rail off and SCD41 asleep, against the 7–10 µA design target
+- [ ] Measure active current during a full measurement cycle
+- [ ] Verify the divider against a multimeter across a 3.0–4.2 V bench-supply sweep
+- [ ] Record all results in `docs/HARDWARE_DESIGN.md` §3
 
 ---
 
-## Milestone 3 — Matter Integration & Advanced UI
+## Milestone 3 — Matter Integration
 
-**Due 2026-08-19 · ⬜ Not started**
+**Due 2026-09-05 · ⬜ Not started**
 
-> **Goal:** join the Matter ecosystem and build a user interface worth looking at. Runs entirely on the
-> wired prototype.
+> **Goal:** join the Thread mesh and prove it, once, properly.
 
-### Firmware
-- [ ] Configure Matter endpoints for Temperature, Relative Humidity, CO₂ and Illuminance
-- [ ] Configure the Occupancy Sensing cluster
-- [ ] Configure the Power Source cluster for battery reporting
-- [ ] Implement Thread commissioning and verify against Apple Home
-- [ ] Verify commissioning against Home Assistant
-- [ ] Operate as a Sleepy End Device with instant unsolicited reporting on presence
-- [ ] Decide how to expose the three distance zones over Matter (see `project_description.md` §17)
-- [ ] Enforce a minimum interval between SCD41 measurements to bound wake cost
+### Firmware — 4 September
+- [x] Temperature, Relative Humidity and Illuminance endpoints reporting live values
+- [x] CO₂ via a Carbon Dioxide Concentration Measurement cluster on an Air Quality Sensor endpoint
+- [ ] Occupancy Sensing cluster driven by PIR + radar fusion — **PIR half working; the radar has never returned a parseable line**
+- [x] Operate as an ICD (Sleepy End Device) with an immediate report on presence
+- [ ] Physical button: short press refreshes, long press performs the Matter factory reset
 
-### UI
-- [ ] Write a graphics driver supporting proportional fonts
-- [ ] Add per-measurement icons (temperature, humidity, CO₂, lux)
-- [ ] Add an explicit "updating" state so stale RTC data is never mistaken for live data
+### Commissioning — 4–5 September
+- [x] Commission over Thread against the Border Router — fabric 0x1, `ha-thread-5af3`, PAN 0x5af3, channel 15, attached as child (2 Sep)
+- [ ] Read all five measurements from the controller
+- [ ] Confirm presence reaches the controller within ~2 s of someone walking in
+- [ ] Confirm the long-press factory reset clears the fabric and re-advertises
 
-### Calibration
-- [ ] Build a radar calibration routine that tunes the per-gate sensitivity threshold
-- [ ] Calibrate against an empty room and validate the 0.7 m zone boundaries
-- [ ] Validate PIR + radar fusion holds occupancy for a stationary person
+### Known limitations
+
+- **Apple Home and Google Home will reject this device.** It uses the esp-matter
+  development attestation certificates (vendor ID `0xFFF1`), and both ecosystems enforce certified
+  attestation. Home Assistant accepts them. This is a certification question, not a firmware defect,
+  and closing it needs a real vendor ID from the CSA.
+- **No real-time clock.** `GetClock_RealTimeMS()` is unsupported, so the stack falls back to Last
+  Known Good Time. Harmless for a sensor, visible in the log during CASE.
+
+### Deferred to future work
+- [ ] Expose the three distance zones over Matter (`project_description.md` §17.4)
+- [ ] Per-gate radar sensitivity calibration against an empty room
+- [ ] Verify against a second ecosystem
+- [ ] Proportional-font UI with per-measurement icons
 
 ---
 
-## Milestone 4 — Final Assembly, Testing & Release
+## Milestone 4 — Hardware Design, Assembly & Release
 
-**Due 2026-08-31 · ⬜ Not started**
+**Due 2026-09-08 · ⬜ Not started**
 
-> **Goal:** assemble the finished unit, prove it runs, and document it well enough for someone else to
-> rebuild it.
+> **Goal:** finish the PCB design, get the case printed and fitted, prove the thing runs, and document
+> it well enough for someone else to rebuild it.
 
-### Assembly — target 20–22 August
-- [ ] Print the enclosure
-- [ ] Mount the PIR Fresnel lens holder at the correct focal distance
-- [ ] Flush-mount the mmWave radar to avoid internal reflections
-- [ ] Verify SCD41 airflow through the vents
-- [ ] Final wiring cleanup and strain relief; fit the prototype into the case
+### PCB — Altium, designed not fabricated
+- [ ] Design package: net list, BOM, pull-up and decoupling values, placement and thermal plan (3 Sep)
+- [ ] Create the Altium project and library parts (3 Sep)
+- [ ] Schematic entry and ERC (4 Sep)
+- [ ] Placement, copper relief around the SHT40 and SCD41, routing, DRC (6 Sep)
+- [ ] Export gerbers to `hardware/gerbers/` and the schematic PDF to `hardware/pdf/` (7 Sep)
 
-### Testing — start no later than 23 August
-- [ ] Run the 7-day stability test
-- [ ] Record power consumption and real-world uptime
+### Enclosure
+- [ ] Caliper every module and fill the dimension table (2 Sep)
+- [ ] Enclosure specification with the PIR focal standoff and radar window constraints (3 Sep)
+- [ ] Model in Fusion/FreeCAD, export STL and STEP (4 Sep)
+- [ ] **Print — start Friday evening** (4 Sep)
+- [ ] Test-fit, adjust, reprint if needed (5 Sep)
+- [ ] Final wiring cleanup, strain relief, close the case (6 Sep)
+
+### Testing — starts 6 September evening
+- [ ] Run the stability test for the time available (~40 h) and report actual elapsed hours
 - [ ] Confirm no Task Watchdog resets over the full run
-- [ ] Verify Matter reporting stays reliable across the whole period
+- [ ] Verify Matter reporting is still live at the end of the run
 
-### Release
-- [ ] Tag firmware v1.0
+### Release — 7–8 September
+- [ ] Update `project_description.md` §17 as each open gap closes
+- [ ] Record measured power figures alongside the original targets
 - [ ] Complete the README with the final Bill of Materials
-- [ ] Publish schematics, gerbers and wiring diagrams
-- [ ] Write the step-by-step Matter commissioning and sensor calibration guide
-- [ ] Record the measured power figures alongside the original targets
+- [ ] Write the Matter commissioning guide
+- [ ] Tag firmware v1.0
