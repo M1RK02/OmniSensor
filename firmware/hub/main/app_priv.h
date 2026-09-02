@@ -169,6 +169,11 @@ esp_err_t omni_display_start(void);
 /* Power: radar rail load switch + battery ADC. */
 esp_err_t omni_power_init(void);
 void      omni_radar_rail_set(bool on);
+/* Hold the CPU out of light sleep. Nested calls are counted, so callers pair
+ * true/false without coordinating with each other. Needed around any long bus
+ * transaction: light sleep isolates GPIOs and stops clocking peripherals, so a
+ * transfer spanning a sleep window is cut in half. */
+void      omni_stay_awake(bool hold);
 /* One multisampled, calibrated battery reading. Call BEFORE starting Matter —
  * RF activity couples noise onto the ADC (project_description.md §7). */
 esp_err_t omni_battery_sample(uint16_t *mv_out, uint8_t *pct_out);

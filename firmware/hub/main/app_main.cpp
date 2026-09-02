@@ -45,6 +45,12 @@ static portMUX_TYPE  s_state_lock = portMUX_INITIALIZER_UNLOCKED;
 static omni_state_t  s_state;
 static QueueHandle_t s_queue;
 
+/* Scheduling work onto the Matter thread before esp_matter::start() has run is
+ * a fatal error in CHIP, not a soft failure. Sensor and presence events can
+ * arrive before then — a PIR that is already asserted at boot produces one
+ * immediately — so every reporter checks this first. */
+static volatile bool s_matter_ready;
+
 static struct {
     uint16_t temperature;
     uint16_t humidity;
@@ -114,6 +120,7 @@ static uint16_t lux_to_matter(float lux)
 
 static void report_temperature(float celsius)
 {
+    VerifyOrReturn(s_matter_ready);
     uint16_t endpoint_id = s_endpoint.temperature;
     VerifyOrReturn(endpoint_id != 0);
     chip::DeviceLayer::SystemLayer().ScheduleLambda([endpoint_id, celsius]() {
@@ -126,6 +133,7 @@ static void report_temperature(float celsius)
 
 static void report_humidity(float percent)
 {
+    VerifyOrReturn(s_matter_ready);
     uint16_t endpoint_id = s_endpoint.humidity;
     VerifyOrReturn(endpoint_id != 0);
     chip::DeviceLayer::SystemLayer().ScheduleLambda([endpoint_id, percent]() {
@@ -138,6 +146,7 @@ static void report_humidity(float percent)
 
 static void report_illuminance(float lux)
 {
+    VerifyOrReturn(s_matter_ready);
     uint16_t endpoint_id = s_endpoint.illuminance;
     VerifyOrReturn(endpoint_id != 0);
     uint16_t encoded = lux_to_matter(lux);
@@ -151,6 +160,7 @@ static void report_illuminance(float lux)
 
 static void report_co2(uint16_t ppm)
 {
+    VerifyOrReturn(s_matter_ready);
     uint16_t endpoint_id = s_endpoint.air_quality;
     VerifyOrReturn(endpoint_id != 0);
     chip::DeviceLayer::SystemLayer().ScheduleLambda([endpoint_id, ppm]() {
@@ -163,6 +173,7 @@ static void report_co2(uint16_t ppm)
 
 static void report_occupancy(bool occupied)
 {
+    VerifyOrReturn(s_matter_ready);
     uint16_t endpoint_id = s_endpoint.occupancy;
     VerifyOrReturn(endpoint_id != 0);
     chip::DeviceLayer::SystemLayer().ScheduleLambda([endpoint_id, occupied]() {
@@ -176,6 +187,7 @@ static void report_occupancy(bool occupied)
 #if CONFIG_OMNI_BATTERY_PRESENT
 static void report_battery(uint16_t mv, uint8_t pct)
 {
+    VerifyOrReturn(s_matter_ready);
     /* Power Source lives on the root node (endpoint 0). BatPercentRemaining is
      * in half-percent units, so a full cell is 200, not 100. */
     chip::DeviceLayer::SystemLayer().ScheduleLambda([mv]() {
@@ -189,10 +201,27 @@ static void report_battery(uint16_t mv, uint8_t pct)
 }
 #endif
 
+/* Push everything currently known. Used once, when reporting opens. */
+static void publish_current_state(void)
+{
+    omni_state_t st;
+    omni_get_state(&st);
+    if (st.env_valid) {
+        report_temperature(st.temp_c);
+        report_humidity(st.humidity_pct);
+        report_illuminance(st.lux);
+        if (st.co2_ppm > 0) {
+            report_co2(st.co2_ppm);
+        }
+    }
+    report_occupancy(st.occupied);
+}
+
 /* Presence should reach the controller immediately, not at the next poll.
  * Tell the ICD manager there is activity so it enters active mode. */
 static void notify_network_activity(void)
 {
+    VerifyOrReturn(s_matter_ready);
 #if CONFIG_ENABLE_ICD_SERVER
     LogErrorOnFailure(chip::DeviceLayer::PlatformMgr().ScheduleWork([](intptr_t) {
         chip::app::ICDNotifier::GetInstance().NotifyNetworkActivityNotification();
@@ -415,17 +444,33 @@ extern "C" void app_main()
     node_t *node = node::create(&node_config, app_attribute_update_cb, app_identification_cb);
     ABORT_APP_ON_FAILURE(node != nullptr, ESP_LOGE(TAG, "Failed to create Matter node"));
 
+    /* MinMeasuredValue and MaxMeasuredValue are mandatory and default to null,
+     * which tells a controller nothing about what the sensor can actually
+     * measure. Home Assistant creates no entity for a cluster whose range it
+     * cannot establish, which is why only the two endpoints configured by hand
+     * below showed up. Declare the ranges from the datasheets. */
     temperature_sensor::config_t temperature_config;
+    temperature_config.temperature_measurement.min_measured_value =
+        nullable<int16_t>(-4000);   /* SHT40: -40.00 C */
+    temperature_config.temperature_measurement.max_measured_value =
+        nullable<int16_t>(12500);   /* SHT40: +125.00 C */
     endpoint_t *temperature_ep = temperature_sensor::create(node, &temperature_config, ENDPOINT_FLAG_NONE, NULL);
     ABORT_APP_ON_FAILURE(temperature_ep != nullptr, ESP_LOGE(TAG, "Failed to create temperature endpoint"));
     s_endpoint.temperature = endpoint::get_id(temperature_ep);
 
     humidity_sensor::config_t humidity_config;
+    humidity_config.relative_humidity_measurement.min_measured_value =
+        nullable<uint16_t>(0);      /* 0.00 %RH */
+    humidity_config.relative_humidity_measurement.max_measured_value =
+        nullable<uint16_t>(10000);  /* 100.00 %RH */
     endpoint_t *humidity_ep = humidity_sensor::create(node, &humidity_config, ENDPOINT_FLAG_NONE, NULL);
     ABORT_APP_ON_FAILURE(humidity_ep != nullptr, ESP_LOGE(TAG, "Failed to create humidity endpoint"));
     s_endpoint.humidity = endpoint::get_id(humidity_ep);
 
     light_sensor::config_t illuminance_config;
+    /* Log encoded, same as MeasuredValue: 1 lux -> 1, 65535 lux -> 48165. */
+    illuminance_config.illuminance_measurement.min_measured_value = nullable<uint16_t>(1);
+    illuminance_config.illuminance_measurement.max_measured_value = nullable<uint16_t>(48165);
     endpoint_t *illuminance_ep = light_sensor::create(node, &illuminance_config, ENDPOINT_FLAG_NONE, NULL);
     ABORT_APP_ON_FAILURE(illuminance_ep != nullptr, ESP_LOGE(TAG, "Failed to create illuminance endpoint"));
     s_endpoint.illuminance = endpoint::get_id(illuminance_ep);
@@ -483,7 +528,12 @@ extern "C" void app_main()
              s_endpoint.temperature, s_endpoint.humidity, s_endpoint.illuminance,
              s_endpoint.air_quality, s_endpoint.occupancy);
 
-    /* ---- Application tasks (all below the Matter stack priority) ---- */
+    /* ---- Application tasks (all below the Matter stack priority) ----
+     * Started before the radio, deliberately. The SCD41 stopped acknowledging
+     * its address once Thread and BLE were up, and initialising it while the
+     * radio is still quiet is the difference between a working sensor and one
+     * that needs unplugging. Reporting is gated on s_matter_ready, so an event
+     * arriving before the stack exists is stored, not pushed. */
     ABORT_APP_ON_FAILURE(xTaskCreate(state_owner_task, "omni_state", 4096, NULL,
                                      OMNI_PRIO_STATE_OWNER, NULL) == pdPASS,
                          ESP_LOGE(TAG, "Failed to start state owner task"));
@@ -512,6 +562,12 @@ extern "C" void app_main()
 
     err = esp_matter::start(app_event_cb);
     ABORT_APP_ON_FAILURE(err == ESP_OK, ESP_LOGE(TAG, "Failed to start Matter: %d", err));
+
+    /* Reporting opens only now. Anything the tasks measured while the stack was
+     * coming up is already in shared state, so publish that snapshot rather
+     * than making a controller wait for the next measurement cycle. */
+    s_matter_ready = true;
+    publish_current_state();
 
     ESP_LOGI(TAG, "OmniSensor hub running");
 }

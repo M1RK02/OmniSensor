@@ -15,7 +15,8 @@
 static const char *TAG = "ld2420";
 static bool s_installed;
 /* Partial line carried between polls: UART reads do not respect line boundaries. */
-static char s_accumulator[LD2420_LINE_MAX];
+static char   s_accumulator[LD2420_LINE_MAX];
+static size_t s_acc_len;
 /* Bounded so a permanently unparseable stream cannot flood the log. */
 #define LD2420_UNPARSED_LOG_LIMIT 3
 static int s_unparsed_logged;
@@ -46,8 +47,25 @@ esp_err_t ld2420_init(void)
 
     err = uart_param_config(LD2420_UART_PORT, &cfg);
     if (err == ESP_OK) {
-        err = uart_set_pin(LD2420_UART_PORT, OMNI_PIN_RADAR_TX, OMNI_PIN_RADAR_RX,
+        /* Receive only. In text mode the module streams unprompted and we never
+         * send it a command, so leaving TX unassigned means we can never inject
+         * anything into it. This matters because GPIO16 is U0TXD by IO_MUX
+         * default: anything UART0 emits, including during boot, lands on the
+         * radar's RX and can leave it in a state that only a power cycle
+         * clears. Park the pin high instead, which is the UART idle level. */
+        err = uart_set_pin(LD2420_UART_PORT, UART_PIN_NO_CHANGE, OMNI_PIN_RADAR_RX,
                            UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
+    }
+    if (err == ESP_OK) {
+        gpio_config_t tx_idle = {
+            .intr_type    = GPIO_INTR_DISABLE,
+            .mode         = GPIO_MODE_OUTPUT,
+            .pin_bit_mask = 1ULL << OMNI_PIN_RADAR_TX,
+            .pull_down_en = GPIO_PULLDOWN_DISABLE,
+            .pull_up_en   = GPIO_PULLUP_DISABLE,
+        };
+        gpio_config(&tx_idle);
+        gpio_set_level(OMNI_PIN_RADAR_TX, 1);
     }
     if (err != ESP_OK) {
         ESP_LOGE(TAG, "uart configuration failed: %s", esp_err_to_name(err));
@@ -65,10 +83,11 @@ esp_err_t ld2420_init(void)
     gpio_sleep_sel_dis(OMNI_PIN_RADAR_TX);
 
     s_accumulator[0] = '\0';
+    s_acc_len = 0;
     s_unparsed_logged = 0;
     s_installed = true;
-    ESP_LOGI(TAG, "radar UART up on UART%d (TX %d / RX %d)",
-             LD2420_UART_PORT, OMNI_PIN_RADAR_TX, OMNI_PIN_RADAR_RX);
+    ESP_LOGI(TAG, "radar UART up on UART%d (RX %d, TX %d parked idle)",
+             LD2420_UART_PORT, OMNI_PIN_RADAR_RX, OMNI_PIN_RADAR_TX);
     return ESP_OK;
 }
 
@@ -83,17 +102,36 @@ esp_err_t ld2420_deinit(void)
     return err;
 }
 
-/* Pull one complete line out of the accumulator, if there is one. */
-static bool take_line(char *out, size_t out_len)
+/* Handle one complete line. Returns true if it carried a distance. */
+static bool handle_line(const char *line, int *distance_cm, bool *target_present)
 {
-    char *newline = strchr(s_accumulator, '\n');
-    if (newline == NULL) {
+    /* The module interleaves presence lines with range lines:
+     *     ON
+     *     Range 88
+     *     OFF
+     * ON and OFF are not parse failures, they are the presence flag. */
+    if (strcmp(line, "ON") == 0) {
+        if (target_present) *target_present = true;
         return false;
     }
-    *newline = '\0';
-    strlcpy(out, s_accumulator, out_len);
-    memmove(s_accumulator, newline + 1, strlen(newline + 1) + 1);
-    return true;
+    if (strcmp(line, "OFF") == 0) {
+        if (target_present) *target_present = false;
+        return false;
+    }
+
+    const char *range = strstr(line, "Range ");
+    int cm = -1;
+    if (range != NULL && sscanf(range, "Range %d", &cm) == 1 && cm >= 0) {
+        if (distance_cm) *distance_cm = cm;
+        if (target_present) *target_present = true;
+        return true;
+    }
+
+    if (line[0] != '\0' && s_unparsed_logged < LD2420_UNPARSED_LOG_LIMIT) {
+        ESP_LOGW(TAG, "unparsed radar line: \"%s\"", line);
+        s_unparsed_logged++;
+    }
+    return false;
 }
 
 esp_err_t ld2420_poll_distance_cm(int *distance_cm, uint32_t timeout_ms)
@@ -103,42 +141,38 @@ esp_err_t ld2420_poll_distance_cm(int *distance_cm, uint32_t timeout_ms)
     }
 
     uint8_t chunk[LD2420_RX_BUF_SIZE];
-    int len = uart_read_bytes(LD2420_UART_PORT, chunk, sizeof(chunk) - 1,
+    int len = uart_read_bytes(LD2420_UART_PORT, chunk, sizeof(chunk),
                               pdMS_TO_TICKS(timeout_ms));
     if (len < 0) {
         ESP_LOGE(TAG, "uart_read_bytes failed: %d", len);
         return ESP_FAIL;
     }
 
-    if (len > 0) {
-        chunk[len] = '\0';
-        if (strlen(s_accumulator) + (size_t)len < sizeof(s_accumulator)) {
-            strlcat(s_accumulator, (const char *)chunk, sizeof(s_accumulator));
-        } else {
-            /* A line longer than the buffer means we are out of sync with the
-             * stream. Drop what we have and resynchronise on the next newline. */
-            ESP_LOGW(TAG, "accumulator overflow, resynchronising");
-            s_accumulator[0] = '\0';
-        }
-    }
-
     bool found = false;
-    int  unparsed = 0;
-    char line[LD2420_LINE_MAX];
-    /* Drain every complete line; keep the most recent range so a burst of
-     * buffered lines reports the latest position, not the oldest. */
-    while (take_line(line, sizeof(line))) {
-        const char *range = strstr(line, "Range ");
-        int cm = -1;
-        if (range != NULL && sscanf(range, "Range %d", &cm) == 1 && cm >= 0) {
-            if (distance_cm) *distance_cm = cm;
-            found = true;
-        } else if (s_unparsed_logged < LD2420_UNPARSED_LOG_LIMIT && unparsed++ == 0) {
-            /* The parser expects the module's text mode. If it is in binary
-             * mode, or streaming some other format, say so with the evidence
-             * rather than silently reporting no target forever. */
-            ESP_LOGW(TAG, "unparsed radar line: \"%s\"", line);
-            s_unparsed_logged++;
+    /* Assemble lines a byte at a time. The module terminates with CRLF, and a
+     * stray carriage return left in the string wrecks both the comparisons and
+     * the log output. Draining as we go also means the buffer cannot overflow
+     * just because several lines arrived in one read. */
+    for (int i = 0; i < len; i++) {
+        char c = (char)chunk[i];
+
+        if (c == '\r') {
+            continue;
+        }
+        if (c == '\n') {
+            s_accumulator[s_acc_len] = '\0';
+            if (handle_line(s_accumulator, distance_cm, NULL)) {
+                found = true;  /* keep the most recent range in this batch */
+            }
+            s_acc_len = 0;
+            continue;
+        }
+        if (s_acc_len < sizeof(s_accumulator) - 1) {
+            s_accumulator[s_acc_len++] = c;
+        } else {
+            /* Longer than any line the module emits: we are out of sync.
+             * Drop it and resynchronise on the next newline. */
+            s_acc_len = 0;
         }
     }
 

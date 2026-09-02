@@ -5,27 +5,27 @@
 #include "esp_log.h"
 #include "esp_sleep.h"
 #include "freertos/FreeRTOS.h"
-#include "freertos/semphr.h"
+#include "freertos/task.h"
+
+/* How often the pin is sampled while waiting for motion. */
+#define PIR_POLL_INTERVAL_MS  50
 
 static const char *TAG = "pir";
-static SemaphoreHandle_t s_motion_sem;
-
-static void IRAM_ATTR pir_isr_handler(void *arg)
-{
-    BaseType_t higher_priority_task_woken = pdFALSE;
-    xSemaphoreGiveFromISR(s_motion_sem, &higher_priority_task_woken);
-    portYIELD_FROM_ISR(higher_priority_task_woken);
-}
 
 esp_err_t pir_init(void)
 {
-    s_motion_sem = xSemaphoreCreateBinary();
-    if (s_motion_sem == NULL) {
-        return ESP_ERR_NO_MEM;
-    }
-
+    /* No runtime interrupt on this pin, deliberately.
+     *
+     * Light-sleep GPIO wakeup only supports level triggers, and
+     * gpio_wakeup_enable() sets the pin's interrupt type to do it — which
+     * overwrites any edge type registered for a runtime ISR. A level-triggered
+     * interrupt whose condition persists re-enters its handler forever, so a
+     * PIR that happens to be asserted when this runs locks the CPU out of
+     * every other task. Polling a pin every 50 ms costs nothing and cannot do
+     * that; the wake itself is handled by the sleep subsystem below, not by an
+     * ISR, so instant wake is unaffected. */
     gpio_config_t io_conf = {
-        .intr_type    = GPIO_INTR_POSEDGE,
+        .intr_type    = GPIO_INTR_DISABLE,
         .mode         = GPIO_MODE_INPUT,
         .pin_bit_mask = 1ULL << OMNI_PIN_PIR,
         .pull_down_en = GPIO_PULLDOWN_ENABLE,
@@ -36,18 +36,9 @@ esp_err_t pir_init(void)
         return err;
     }
 
-    err = gpio_install_isr_service(0);
-    if (err != ESP_OK && err != ESP_ERR_INVALID_STATE) {  /* already installed is fine */
-        return err;
-    }
-
-    err = gpio_isr_handler_add(OMNI_PIN_PIR, pir_isr_handler, NULL);
-    if (err != ESP_OK) {
-        return err;
-    }
-
-    /* Arm as a light-sleep wake source. The hub sleeps LIGHT, not deep: deep
-     * sleep would tear down the Thread stack and drop us off the mesh. */
+    /* Arm as a light-sleep wake source. This sets the pin's interrupt type to
+     * level-high, but leaves the CPU interrupt itself disabled, which is
+     * exactly what we want: it wakes the chip without ever running a handler. */
     err = gpio_wakeup_enable(OMNI_PIN_PIR, GPIO_INTR_HIGH_LEVEL);
     if (err != ESP_OK) {
         ESP_LOGW(TAG, "gpio_wakeup_enable failed: %s", esp_err_to_name(err));
@@ -55,7 +46,8 @@ esp_err_t pir_init(void)
         esp_sleep_enable_gpio_wakeup();
     }
 
-    ESP_LOGI(TAG, "PIR armed on GPIO%d", OMNI_PIN_PIR);
+    ESP_LOGI(TAG, "PIR armed on GPIO%d (level %d)",
+             OMNI_PIN_PIR, gpio_get_level(OMNI_PIN_PIR));
     return ESP_OK;
 }
 
@@ -66,8 +58,13 @@ bool pir_is_asserted(void)
 
 bool pir_wait_for_motion(uint32_t timeout_ms)
 {
-    if (s_motion_sem == NULL) {
-        return false;
+    uint32_t waited = 0;
+    while (waited < timeout_ms) {
+        if (pir_is_asserted()) {
+            return true;
+        }
+        vTaskDelay(pdMS_TO_TICKS(PIR_POLL_INTERVAL_MS));
+        waited += PIR_POLL_INTERVAL_MS;
     }
-    return xSemaphoreTake(s_motion_sem, pdMS_TO_TICKS(timeout_ms)) == pdTRUE;
+    return pir_is_asserted();
 }

@@ -50,6 +50,10 @@ static void measure_once(void)
 {
     omni_evt_t evt = { .type = OMNI_EVT_ENV };
 
+    /* The SCD41 single shot blocks for over five seconds and the bus has to stay
+     * alive for all of it. Exempting the pins from sleep isolation is not enough
+     * on its own, because a sleeping peripheral is not clocked either. */
+    omni_stay_awake(true);
     post_updating(true);
 
     /* Fast sensors first, so the display gets something real quickly. */
@@ -71,8 +75,12 @@ static void measure_once(void)
         uint16_t co2 = 0;
         float    scd_temp = 0.0f, scd_rh = 0.0f;
 
-        if (scd41_wake_up() == ESP_OK &&
-            scd41_measure_single_shot(&co2, &scd_temp, &scd_rh) == ESP_OK) {
+#if CONFIG_OMNI_BATTERY_PRESENT
+        /* Only worth waking it if we put it to sleep, and we only do that on
+         * battery. See the power_down call below. */
+        scd41_wake_up();
+#endif
+        if (scd41_measure_single_shot(&co2, &scd_temp, &scd_rh) == ESP_OK) {
             evt.env.co2_ppm   = co2;
             evt.env.co2_valid = true;
             s_last_co2_us     = esp_timer_get_time();
@@ -91,11 +99,17 @@ static void measure_once(void)
                 evt.env.humidity_valid = true;
             }
         }
-        /* Park the sensor whether or not the measurement worked. */
+#if CONFIG_OMNI_BATTERY_PRESENT
+        /* Park the sensor whether or not the measurement worked. Sleep mode is
+         * a battery optimisation worth roughly 0.15 mA; on USB it buys nothing
+         * and costs a wake_up handshake before every measurement, which is one
+         * more thing to get wrong. Leave it idle instead. */
         scd41_power_down();
+#endif
     }
 
     post_updating(false);
+    omni_stay_awake(false);
 
     if (evt.env.temp_valid || evt.env.humidity_valid ||
         evt.env.lux_valid  || evt.env.co2_valid) {

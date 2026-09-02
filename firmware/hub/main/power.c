@@ -150,20 +150,28 @@ esp_err_t omni_power_init(void)
     return battery_adc_init();
 }
 
+void omni_stay_awake(bool hold)
+{
+#if CONFIG_PM_ENABLE
+    if (s_active_lock == NULL) {
+        return;
+    }
+    /* esp_pm_lock counts acquisitions, so independent callers can nest freely. */
+    if (hold) {
+        esp_pm_lock_acquire(s_active_lock);
+    } else {
+        esp_pm_lock_release(s_active_lock);
+    }
+#endif
+}
+
 void omni_radar_rail_set(bool on)
 {
     if (on == s_radar_rail_on) {
         return;
     }
-#if CONFIG_PM_ENABLE
-    if (s_active_lock != NULL) {
-        if (on) {
-            esp_pm_lock_acquire(s_active_lock);
-        } else {
-            esp_pm_lock_release(s_active_lock);
-        }
-    }
-#endif
+    /* Hold it for the whole session: powering up, streaming, powering down. */
+    omni_stay_awake(on);
 
 #if CONFIG_OMNI_LOAD_SWITCH_PRESENT
     gpio_set_level(OMNI_PIN_RADAR_EN, on ? 0 : 1);

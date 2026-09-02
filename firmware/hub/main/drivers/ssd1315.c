@@ -58,7 +58,13 @@ esp_err_t ssd1315_init(i2c_master_bus_handle_t bus)
     i2c_device_config_t cfg = {
         .dev_addr_length = I2C_ADDR_BIT_LEN_7,
         .device_address  = OMNI_ADDR_SSD1315,
-        .scl_speed_hz    = 400000,  /* the OLED tolerates fast mode; the sensors do not */
+        /* 100 kHz, not the 400 kHz this part can manage. With no external
+         * pull-ups the bus is held up by the ESP32's internal ones, which are
+         * tens of kOhm — far too weak for fast mode across four devices and
+         * breadboard wiring, and marginal timing shows up as one device
+         * dropping off rather than as an obvious failure. Run the whole bus at
+         * one speed until the board with real pull-ups exists. */
+        .scl_speed_hz    = 100000,
     };
     esp_err_t err = i2c_master_bus_add_device(bus, &cfg, &s_dev);
     if (err != ESP_OK) {
