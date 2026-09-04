@@ -86,7 +86,7 @@ CONFIG_SUPPORT_GROUPCAST_CLUSTER=n
 CONFIG_ESP_TASK_WDT_CHECK_IDLE_TASK_CPU0=n
 CONFIG_ESP_TASK_WDT_TIMEOUT_S=10
 
-# --- Button (GPIO1 factory reset) ------------------------------------------
+# --- Button (GPIO9 BOOT button factory reset) ------------------------------
 # Power-save support is a runtime flag on button v4 (enable_power_save in
 # button_gpio_config_t), not a Kconfig symbol.
 CONFIG_BUTTON_PERIOD_TIME_MS=20

@@ -31,8 +31,12 @@ extern "C" {
 #define OMNI_PIN_I2C_SCL        GPIO_NUM_23  /* D5 */
 #define OMNI_PIN_PIR            GPIO_NUM_2   /* D2, LP_GPIO2, wake-capable, active HIGH */
 #define OMNI_PIN_BATT_SENSE     GPIO_NUM_0   /* D0/A0, ADC1_CH0, 2x100k divider */
-#define OMNI_PIN_BUTTON         GPIO_NUM_1   /* D1, LP_GPIO1, wake-capable, active LOW */
+#define OMNI_PIN_BUTTON         GPIO_NUM_9   /* Built-in BOOT button (LP_GPIO9), active LOW */
 #define OMNI_PIN_STATUS_LED     GPIO_NUM_15  /* on-board user LED */
+#define OMNI_PIN_RAIL_EN        GPIO_NUM_21  /* D3, active LOW P-MOSFET gate (SI2301 radar switch) */
+#define OMNI_PIN_RADAR_TX       16           /* D6, UART0 TX -> LD2420 RX */
+#define OMNI_PIN_RADAR_RX       17           /* D7, UART0 RX <- LD2420 TX */
+#define OMNI_RADAR_UART_PORT    UART_NUM_0
 #define OMNI_PIN_RF_SWITCH_EN   GPIO_NUM_3   /* RF switch enable, active LOW (Seeed XIAO module internal) */
 #define OMNI_PIN_RF_ANT_SEL     GPIO_NUM_14  /* Antenna select: 0 = internal ceramic, 1 = external U.FL */
 
@@ -169,6 +173,12 @@ void      omni_stay_awake(bool hold);
  * RF activity couples noise onto the ADC (project_description.md §7). */
 esp_err_t omni_battery_sample(uint16_t *mv_out, uint8_t *pct_out);
 esp_err_t omni_battery_task_start(void);
+
+/* Switched radar rail control (SI2301 P-MOSFET on GPIO21 / D3).
+ * Active LOW: enable=true drives pin LOW (MOSFET ON).
+ * enable=false drives pin HIGH (MOSFET OFF). */
+esp_err_t omni_radar_rail_set(bool enable);
+esp_err_t omni_radar_power_cycle(void);
 
 #ifdef __cplusplus
 }

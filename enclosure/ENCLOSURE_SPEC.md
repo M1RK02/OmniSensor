@@ -6,7 +6,7 @@ This document describes how to model, print, and assemble the enclosure around t
 
 Build the enclosure as a two-piece clamshell:
 
-- **Front shell:** carries the OLED window, PIR lens, light-sensor openings, radar sensing face, and user button.
+- **Front shell:** carries the OLED window, PIR lens, light-sensor openings, radar sensing face, and BOOT button access.
 - **Rear shell:** carries the XIAO ESP32-C6 and sensor boards on internal standoffs, provides cable routing, and closes the wiring cavity.
 - **Perimeter joint:** use a continuous tongue-and-groove or stepped overlap. Do not rely on the printed edge alone to locate the two halves.
 - **Fasteners:** use four M3 screws into captive nuts or heat-set inserts, one near each corner. Keep the fasteners outside the PCB footprints and cable path.
@@ -62,9 +62,10 @@ Use the real connector orientations when creating the board footprints. The conn
 
 ### Button
 
-- Provide an internal boss for the 6 x 6 x 5 mm button body.
-- Align the plunger with a front-panel aperture and allow the measured 0.25 mm plunger travel without the button body carrying shell load.
-- Add a small internal shoulder to retain the button, leaving enough clearance for the switch leads and wiring.
+- Provide an aperture or recess aligned with the BOOT button's position on the XIAO module.
+- The BOOT button is a small surface-mount button on the XIAO board itself — the enclosure should provide a hole or a printed plunger/actuator that reaches through to press it.
+- No internal boss for a 6x6 mm switch body is needed.
+- The aperture should be small enough to prevent accidental presses but accessible with a fingertip or small tool.
 
 ## 5. Mounting Details
 

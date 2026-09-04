@@ -137,6 +137,56 @@ static esp_err_t rf_switch_init(void)
     return ESP_OK;
 }
 
+static esp_err_t radar_rail_init(void)
+{
+    gpio_config_t io_conf = {
+        .pin_bit_mask = (1ULL << OMNI_PIN_RAIL_EN),
+        .mode = GPIO_MODE_OUTPUT,
+        .pull_up_en = GPIO_PULLUP_ENABLE,
+        .pull_down_en = GPIO_PULLDOWN_DISABLE,
+        .intr_type = GPIO_INTR_DISABLE,
+    };
+    esp_err_t err = gpio_config(&io_conf);
+    if (err != ESP_OK) {
+        ESP_LOGE(TAG, "failed to configure radar rail switch GPIO: %s", esp_err_to_name(err));
+        return err;
+    }
+
+    /* P-MOSFET gate is active LOW (SI2301):
+     * 1 = Gate pulled HIGH -> MOSFET OFF (fail-safe default on cold boot)
+     * 0 = Gate pulled LOW  -> MOSFET ON */
+    gpio_set_level(OMNI_PIN_RAIL_EN, 1);
+
+    /* Exempt pin from sleep isolation so gate level is held across light sleep */
+    gpio_sleep_sel_dis(OMNI_PIN_RAIL_EN);
+
+    ESP_LOGI(TAG, "Radar rail switch configured on GPIO%d (initially OFF)", OMNI_PIN_RAIL_EN);
+    return ESP_OK;
+}
+
+esp_err_t omni_radar_rail_set(bool enable)
+{
+    /* Active LOW: 0 = ON, 1 = OFF */
+    uint32_t level = enable ? 0 : 1;
+    esp_err_t err = gpio_set_level(OMNI_PIN_RAIL_EN, level);
+    if (err == ESP_OK) {
+        ESP_LOGI(TAG, "Radar rail (GPIO%d) -> %s",
+                 OMNI_PIN_RAIL_EN, enable ? "ENABLED (ON)" : "DISABLED (OFF)");
+    }
+    return err;
+}
+
+esp_err_t omni_radar_power_cycle(void)
+{
+    ESP_LOGI(TAG, "Power-cycling radar rail via GPIO%d...", OMNI_PIN_RAIL_EN);
+    omni_radar_rail_set(false);     /* Cut power to radar rail */
+    vTaskDelay(pdMS_TO_TICKS(500)); /* Allow decoupling caps to discharge */
+    omni_radar_rail_set(true);      /* Re-energise radar rail */
+    ESP_LOGI(TAG, "Radar rail re-energised. Waiting for radar MCU to stabilize...");
+    vTaskDelay(pdMS_TO_TICKS(1500));
+    return ESP_OK;
+}
+
 esp_err_t omni_power_init(void)
 {
 #if CONFIG_PM_ENABLE
@@ -147,6 +197,7 @@ esp_err_t omni_power_init(void)
 #endif
 
     rf_switch_init();
+    radar_rail_init();
 
     return battery_adc_init();
 }

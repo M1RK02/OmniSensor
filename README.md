@@ -10,9 +10,9 @@ occupied. A local OLED shows the current readings without needing a phone.
 The design target is a device that spends almost all of its life in deep sleep, drawing single-digit
 microamps, and wakes instantly when someone walks in.
 
-> **Status:** Milestone 1 complete — all seven sensors validated individually.
-> Integration, power management and Matter are in progress.
-> See [docs/MILESTONES.md](docs/MILESTONES.md) for the timeline.
+> **Status:** Integrated firmware running. Matter commissioned against Home Assistant.
+> Enclosure and PCB design in progress.
+> See [docs/DELIVERY_CHECKLIST.md](docs/DELIVERY_CHECKLIST.md) for the schedule.
 
 ---
 
@@ -27,7 +27,8 @@ microamps, and wakes instantly when someone walks in.
 | SSD1315 | 128×64 monochrome OLED | I²C | `0x3C` |
 | Hi-Link LD2420 | 24 GHz mmWave presence radar | UART | TX 16 / RX 17 |
 | SR602 | PIR motion (deep-sleep wake source) | GPIO | `GPIO_NUM_2` |
-| Vishay SI2301 | P-MOSFET sensor-rail load switch | GPIO | TBD |
+| Vishay SI2301 | P-MOSFET radar power switch | GPIO | D3 (GPIO21) |
+| BOOT button | Factory reset + refresh | GPIO | GPIO9 (on-module) |
 
 Shared I²C bus on **SDA 22 / SCL 23**. Full pin map and electrical design in
 [project_description.md](project_description.md).
@@ -48,7 +49,7 @@ OmniSensor/
 │     └─ all/               # all seven together, with RTC-memory fast wake
 ├─ hardware/                # Altium schematic + PCB (designed, not fabricated)
 ├─ enclosure/               # 3D-printable case (CAD sources + STLs)
-└─ docs/                    # setup, hardware design, milestones
+└─ docs/                    # setup, hardware design, delivery schedule
 ```
 
 ## Quick start
@@ -73,7 +74,7 @@ Start with `sht40` if you just want to confirm your toolchain and wiring work.
 | [project_description.md](project_description.md) | Full technical description: architecture, BOM, pin map, power budget, Matter mapping |
 | [docs/SETUP.md](docs/SETUP.md) | ESP-IDF and Matter SDK installation, build/flash/monitor |
 | [docs/HARDWARE_DESIGN.md](docs/HARDWARE_DESIGN.md) | Power management, load switching, battery sensing, PCB and enclosure design |
-| [docs/MILESTONES.md](docs/MILESTONES.md) | Project timeline and task checklists |
+| [docs/DELIVERY_CHECKLIST.md](docs/DELIVERY_CHECKLIST.md) | Project schedule, scope, milestones and delivery plan |
 
 ## References
 

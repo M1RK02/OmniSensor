@@ -31,7 +31,7 @@ owns. That is not a coincidence — it is the reason for the split.
 
 | Net | Source | Feeds |
 |---|---|---|
-| `+3V3_AO` | XIAO `3V3` pin | SHT40, SCD41, BH1750, OLED, I²C pull-ups, button pull-up, SI2301 source and gate pull-up |
+| `+3V3_AO` | XIAO `3V3` pin | SHT40, SCD41, BH1750, OLED, I²C pull-ups, SI2301 source and gate pull-up |
 | `+3V3_SW` | SI2301 drain | **LD2420 only** |
 | `VBAT` | XIAO `BAT+` pad | Battery divider top |
 | `GND` | XIAO `GND` | Everything |
@@ -59,10 +59,11 @@ XIAO pin names are the silkscreen labels; GPIO numbers are the ESP32-C6 pins beh
 | `RADAR_RX` | D7 (GPIO17) | J_RADAR.4 (module TX) |
 | `PIR_OUT` | D2 (GPIO2) | J_PIR.2, R3 (100 k) → `GND` |
 | `BATT_SENSE` | D0 (GPIO0) | R4/R5 divider midpoint, C1 (100 nF) → `GND` |
-| `BTN` | D1 (GPIO1) | SW1 → `GND`, R6 (10 k) → `+3V3_AO`, C2 (100 nF) → `GND` |
 | `RAIL_EN` | D3 (GPIO21) | Q1 gate, R7 (100 k) → `+3V3_AO` |
 | `VBAT` | BAT+ | R4 top |
 | `+3V3_SW` | — | Q1 drain, J_RADAR.1, C3 (100 µF), C4 (100 nF) |
+
+**Factory reset uses the XIAO's built-in BOOT button (GPIO9).** No external button circuit is needed on the PCB.
 
 **Cross the radar UART deliberately.** `RADAR_TX` (an output) goes to the module's **RX** pin and
 `RADAR_RX` to its **TX**. Label the header pins with the *module's* names on the silkscreen and add a
@@ -211,13 +212,11 @@ availability before ordering — though for this project nothing is being ordere
 | R1, R2 | 3.3 kΩ 1 % | 0603 | Yageo RC0603FR-073K3L |
 | R3, R7 | 100 kΩ 1 % | 0603 | Yageo RC0603FR-07100KL |
 | R4, R5 | 100 kΩ **1 %** | 0603 | Yageo RC0603FR-07100KL |
-| R6 | 10 kΩ 1 % | 0603 | Yageo RC0603FR-0710KL |
-| C1, C2, C4 | 100 nF X7R 50 V | 0603 | Samsung CL10B104KB8NNNC |
+| C1, C4 | 100 nF X7R 50 V | 0603 | Samsung CL10B104KB8NNNC |
 | C5–C8 | 100 nF X7R 50 V | 0603 | Samsung CL10B104KB8NNNC |
 | C9 | 10 µF X5R 6.3 V (SCD41 bulk) | 0805 | Murata GRM21BR61A106KE19L |
 | C10 | 10 µF X5R 6.3 V (3V3 bulk) | 0805 | Murata GRM21BR61A106KE19L |
 | C3 | 100 µF X5R 6.3 V | 1206 | Murata GRM31CR60J107ME39L |
-| SW1 | Tactile switch, SPST-NO | 6×6 mm THT | Any |
 | J_OLED | 4-pin header 2.54 mm | THT | Any |
 | J_RADAR | 4-pin header 2.54 mm | THT | Any |
 | J_PIR | 3-pin header 2.54 mm | THT | Any |

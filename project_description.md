@@ -35,7 +35,7 @@ the **single-digit microamps**, and wakes within milliseconds when the PIR fires
 - Wake instantly on physical presence and push an unsolicited update to the Thread network.
 - Display current readings on a local OLED without requiring a phone or hub.
 - Commission into Apple Home and Home Assistant using standard Matter flows.
-- Provide a physical button for the Matter-mandated factory reset.
+- Provide a factory reset via long-press on the XIAO's built-in BOOT button (GPIO9).
 
 ### Non-functional
 
@@ -54,16 +54,19 @@ graph TD
         RADIO["802.15.4 radio<br/>Thread / Matter"]
     end
 
-    subgraph SW["Switched sensor rail (SI2301)"]
+    subgraph SW["Switched radar rail (SI2301)"]
+        LD["LD2420<br/>mmWave radar"]
+    end
+
+    subgraph AO["Always-on 3V3"]
         SHT["SHT40<br/>temp + humidity"]
         SCD["SCD41<br/>CO2"]
         BH["BH1750<br/>lux"]
-        LD["LD2420<br/>mmWave radar"]
     end
 
     OLED["SSD1315 OLED"]
     PIR["SR602 PIR"]
-    BTN["Factory reset button"]
+    BTN["BOOT button<br/>GPIO9"]
     BATT["LiPo + divider"]
 
     CPU -->|I2C SDA22/SCL23| SHT
@@ -72,7 +75,7 @@ graph TD
     CPU -->|I2C| OLED
     CPU -->|UART 16/17| LD
     PIR -->|GPIO2 wake| CPU
-    BTN -->|GPIO wake| CPU
+    BTN -->|GPIO9 wake| CPU
     BATT -->|ADC| CPU
     CPU -->|load switch GPIO| SW
     CPU <--> RTCMEM
@@ -93,9 +96,9 @@ from RTC memory before the sensors have even powered up.
 | SSD1315 | 128×64 OLED | I²C | `0x3C` | SSD1306-compatible command set |
 | Hi-Link LD2420 | 24 GHz mmWave presence | UART | TX 16 / RX 17 | Gate-based distance reporting |
 | SR602 | PIR motion | GPIO | `GPIO_NUM_2` | Deep-sleep wake source; needs Fresnel lens |
-| Vishay SI2301 | P-MOSFET load switch | GPIO | TBD | Cuts the sensor rail during sleep |
-| 2× 100 kΩ, 1× 100 nF | Battery ADC divider | ADC | TBD | See §7 |
-| 100 µF+ | Switched-rail bulk cap | — | — | Absorbs SCD41 inrush at rail turn-on |
+| Vishay SI2301 | P-MOSFET load switch | GPIO | D3 (GPIO21) | Cuts the sensor rail during sleep. Feeds LD2420 only |
+| 2× 100 kΩ, 1× 100 nF | Battery ADC divider | ADC | D0 (GPIO0) | PCB design; see §7 |
+| 100 µF+ | Switched-rail bulk cap | — | — | Absorbs LD2420 inrush at rail turn-on |
 
 ## 5. Pin map
 
@@ -103,12 +106,12 @@ from RTC memory before the sensors have even powered up.
 |---|---|---|---|
 | I²C SDA | 22 | bidir | Shared by SHT40, SCD41, BH1750, SSD1315 |
 | I²C SCL | 23 | out | 100 kHz for sensors, 400 kHz for the OLED |
-| Radar UART TX | 16 | out | See the open question in §17 |
-| Radar UART RX | 17 | in | |
+| Radar UART TX | 16 | out | UART0; connects to module RX |
+| Radar UART RX | 17 | in | UART0; connects to module TX |
 | PIR | `GPIO_NUM_2` | in, pull-down | Deep-sleep wake, active HIGH |
-| Sensor rail enable | TBD | out | Active LOW (P-MOSFET gate), external pull-up |
-| Battery sense | TBD | analog | ADC1, −12 dB attenuation |
-| Factory reset button | TBD | in, pull-up | Long-press; also a wake source |
+| Sensor rail enable | D3 (GPIO21) | out | Active LOW (P-MOSFET gate); PCB pull-up to 3V3 |
+| Battery sense | D0 (GPIO0) | analog | ADC1_CH0, −12 dB attenuation |
+| BOOT button | GPIO9 | in | On-module; short press refreshes, long press factory reset |
 
 ## 6. Power management
 
@@ -121,8 +124,8 @@ polling latency.
 ### Load switching
 
 Even in deep sleep, the sensors themselves would dominate the power budget — the SCD41 in particular. A
-**SI2301 P-channel MOSFET** therefore cuts power to the entire sensor rail (SHT40, SCD41, BH1750, LD2420)
-whenever the device sleeps.
+**SI2301 P-channel MOSFET** therefore cuts power to the radar (LD2420)
+whenever the device sleeps. The SHT40 and BH1750 draw negligible idle current and remain on the always-on rail. The SCD41 is parked with its own power_down command in firmware rather than being physically switched, avoiding I²C bus hazards from an unpowered device sharing the bus with the always-on OLED.
 
 The gate is held by an **external pull-up resistor**, which is a deliberate safety choice: a P-MOSFET
 with its gate pulled to the source voltage is *off*. If the ESP32-C6 control pin floats — during boot,
@@ -130,9 +133,8 @@ after a firmware crash, or throughout deep sleep when GPIO drivers are powered d
 defaults to **off** rather than silently draining the battery. Failure modes should fail toward low
 power, not away from it.
 
-A bulk capacitor of **100 µF or more** sits on the switched rail. When the MOSFET turns on, the SCD41
-draws a substantial inrush current; without local bulk the rail would sag far enough to brown out the
-other I²C devices sharing it.
+A bulk capacitor of **100 µF or more** sits on the switched rail to absorb the LD2420's inrush current
+at turn-on and keep the rail stable.
 
 ### Wake sequence
 
@@ -238,7 +240,7 @@ open design question (§17).
 
 Commissioning follows the normal Matter flow over Thread, which requires an existing Thread Border Router
 on the network (an Apple TV, HomePod, or a Home Assistant SkyConnect/Yellow). A **long press** on the
-physical button performs the Matter-mandated factory reset, clearing fabric credentials.
+XIAO's built-in BOOT button (GPIO9) performs the Matter-mandated factory reset, clearing fabric credentials.
 
 ## 11. Display and UI
 
@@ -272,9 +274,7 @@ was not enough time in the schedule for fabrication and shipping. Design decisio
 
 ### Wired prototype — built and measured
 
-The unit that actually runs is **hand-wired with cables**, and it includes the SI2301 load switch and the
-battery divider on protoboard. This matters: it means the deep-sleep current and the battery gauge are
-**measured results** rather than datasheet arithmetic. The wiring table and photographs live in
+The unit that actually runs is **hand-wired with cables**. It does NOT include the SI2301 load switch or battery divider on protoboard; all sensors sit on the always-on 3V3 rail. The MOSFET and divider exist in the Altium PCB design and in firmware code. The wiring table and photographs live in
 [hardware/prototype/](hardware/prototype/).
 
 ## 13. Enclosure
@@ -312,7 +312,7 @@ OmniSensor/
 └─ docs/
    ├─ SETUP.md
    ├─ HARDWARE_DESIGN.md
-   └─ MILESTONES.md
+   └─ DELIVERY_CHECKLIST.md
 ```
 
 Every example under `firmware/examples/` is an independent ESP-IDF project with its own
@@ -326,29 +326,23 @@ IDF versions older than 5.2. Full installation instructions are in [docs/SETUP.m
 
 ## 16. Status
 
-Milestone 1 is complete: all seven devices have standalone drivers, the I²C bus has been verified free of
-address conflicts, and the radar UART link is working. The `all` example demonstrates every sensor
-running together with RTC-memory fast wake.
+Milestone 1 complete, integrated firmware running, Matter commissioned against Home Assistant.
 
-Remaining work is tracked in [docs/MILESTONES.md](docs/MILESTONES.md), due **31 August 2026**.
+Remaining work is tracked in [docs/DELIVERY_CHECKLIST.md](docs/DELIVERY_CHECKLIST.md), due **8 September 2026**.
 
 ## 17. Known gaps and open decisions
 
 These are unresolved and deliberately recorded rather than hidden:
 
-1. **UART0 conflict — the most significant open issue.** Both `ld2420` and `all` configure the radar on
-   `UART_NUM_0`, pins 16/17. UART0 is also the default ESP-IDF log console. This works today only because
-   the XIAO logs over its native USB-Serial/JTAG peripheral instead, but it is fragile: any build that
-   routes the console back to UART0 will interleave log output with radar traffic and corrupt both.
-   Moving the radar to `UART_NUM_1` is the correct fix and is scheduled for Milestone 2.
-2. **Unassigned GPIOs.** The load-switch enable, battery sense and factory-reset button pins are still
-   TBD, pending the pin budget in the Altium schematic.
-3. **I²C pull-up values.** External pull-ups are specified but not yet valued; depends on final bus
-   capacitance with four devices and cable runs.
+1. **UART0 conflict — acknowledged.** The radar runs on `UART_NUM_0`, pins 16/17. UART0 is also the
+   default ESP-IDF log console. This works because the XIAO logs over its native USB-Serial/JTAG
+   peripheral instead, but any build that routes the console back to UART0 will interleave log output
+   with radar traffic and corrupt both. Moving the radar to `UART_NUM_1` is the correct long-term fix.
+2. **Unassigned GPIOs.** **Resolved** — RAIL_EN = D3 (GPIO21), BATT_SENSE = D0 (GPIO0), BOOT button = GPIO9.
+3. **I²C pull-up values.** **Resolved** — 3.3 kΩ specified in the PCB design (see `hardware/DESIGN_PACKAGE.md` §4).
 4. **Zone reporting over Matter.** Occupancy Sensing carries a boolean. How to expose three distance
    zones — multiple endpoints, or a manufacturer-specific cluster — is undecided.
-5. **Sleep current is a target, not yet a measurement.** The ~7–10 µA figure is a design goal derived
-   from datasheets. Measuring it on the wired prototype is an explicit Milestone 2 task.
+5. **Sleep current is a target, not yet a measurement.** The ~7–10 µA figure is a design target; measurement requires the MOSFET and divider circuit which exist only in the PCB design.
 6. **SCD41 duty cycle.** A 5 s single-shot measurement on every presence wake may be too expensive if
    wakes are frequent. A minimum interval between CO₂ measurements probably needs to be enforced.
 

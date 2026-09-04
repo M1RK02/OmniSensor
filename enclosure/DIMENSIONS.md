@@ -31,7 +31,7 @@ Measure to 0.1 mm. Where a dimension is a hole pattern, give centre-to-centre sp
 | USB-C centre height above XIAO PCB | 1.6mm| Positions the cutout vertically |
 | Dupont/JST connector stack height | 14mm| Cable clearance — this is what makes the case tall |
 | Typical wire bundle diameter | 4mm| Internal routing volume |
-| Button body L × W × H, plunger travel | 6x6x5mm, 0.25mm travel| Button aperture and boss depth |
+| XIAO BOOT button position | On top face, near USB-C end | Enclosure needs an access hole or actuator |
 
 ## Print parameters
 

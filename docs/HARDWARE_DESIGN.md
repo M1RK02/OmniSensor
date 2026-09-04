@@ -20,13 +20,11 @@ The project produces **two hardware artifacts**, and only one of them physically
 | **Status** | Designed in Altium, **never fabricated** | Built and running |
 | **Lives in** | `hardware/altium/`, `hardware/gerbers/`, `hardware/pdf/` | `hardware/prototype/` |
 | **Purpose** | Documented design deliverable | The unit that gets demonstrated and measured |
-| **Contains** | Every design decision below, laid out in copper | Load switch + battery divider on protoboard, everything else cabled |
+| **Contains** | Every design decision below, laid out in copper | All sensors cabled to the always-on 3V3 rail; the load switch and battery divider exist in the PCB design and firmware only |
 
 There was not enough time in the schedule for board fabrication and shipping, so the decision was made
 early to treat the PCB as a design exercise and build the working unit with cables. Crucially, the
-**power hardware is still physically built** — the SI2301 load switch and the ADC divider are wired on
-protoboard. That means the sleep current and battery gauge figures in this document are *measurements*,
-not datasheet arithmetic.
+**power hardware is still physically built** — the load switch and battery divider exist in the Altium PCB design and are implemented in firmware. Sleep current and battery gauge figures are projections from datasheet values.
 
 Anything described below as a layout or routing decision exists only in the Altium design. Anything
 described as a measurement comes from the wired unit.
@@ -82,8 +80,7 @@ thread-safe. Two approaches, in order of preference:
 
 ## 2. Load switching — sensor rail power
 
-**Component:** SI2301 P-channel MOSFET, cutting power completely to the sensor rail (SHT40, SCD41,
-LD2420) during deep sleep.
+**Component:** SI2301 P-channel MOSFET, cutting power to the LD2420 radar during deep sleep.
 
 ### Fail-safe default (the important part)
 
@@ -98,12 +95,12 @@ over days with nobody noticing.
 The rule applied here: **failure modes should fail toward low power.** A floating control pin costs a
 missed reading, not a dead battery.
 
+The SHT40 (~0.08 µA idle) and BH1750 (~0.01 µA powered down) remain on the always-on rail — their sleep currents are negligible. The SCD41 is parked with its own `power_down` command in firmware rather than being physically switched, which avoids I²C bus hazards: an unpowered SCD41 sharing the bus with the always-on OLED would be back-powered through its ESD diodes and could hold SDA low.
+
 ### Inrush stabilisation
 
-A bulk capacitor of **100 µF or more** sits on the switched rail. When the MOSFET turns on, the SCD41
-draws a significant current spike as its photoacoustic sensor energises. Without local bulk, the rail
-sags far enough to brown out the other I²C devices sharing it, producing intermittent and extremely
-confusing bus errors.
+A bulk capacitor of **100 µF or more** sits on the switched rail to absorb the LD2420's inrush current
+at turn-on and keep the rail stable.
 
 ---
 
@@ -150,14 +147,14 @@ the ADC's transfer curve — its most linear region — rather than compressed a
 
 ### Measured results
 
-> **To be filled in during Milestone 2.**
+> **Projected values.** The load switch and battery divider are implemented in the PCB design; the breadboard prototype runs from USB-C without these circuits. The figures below are projections from datasheet values.
 >
 > | Measurement | Target | Measured |
 > |---|---|---|
-> | Deep sleep current, sensor rail off | 7–10 µA | _pending_ |
-> | Active current, all sensors powered | — | _pending_ |
-> | Divider reading vs. multimeter, 4.2 V | ±1 % | _pending_ |
-> | Divider reading vs. multimeter, 3.3 V | ±1 % | _pending_ |
+> | Deep sleep current, sensor rail off | 7–10 µA | projected |
+> | Active current, all sensors powered | — | projected |
+> | Divider reading vs. multimeter, 4.2 V | ±1 % | projected |
+> | Divider reading vs. multimeter, 3.3 V | ±1 % | projected |
 
 ---
 
@@ -227,7 +224,7 @@ Presence events and environmental data map onto standard Matter clusters, handle
 ESP-Matter SDK. Using standard clusters means Apple Home and Home Assistant support the device with no
 custom integration code.
 
-A physical button provides the Matter-mandated **factory reset** via long press, clearing fabric
+The XIAO's built-in BOOT button (GPIO9) provides the Matter-mandated **factory reset** via long press, clearing fabric
 credentials.
 
 Open question: Occupancy Sensing carries a single boolean. Exposing three distance zones needs either
