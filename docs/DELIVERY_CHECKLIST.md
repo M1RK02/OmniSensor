@@ -29,22 +29,24 @@ Nothing has been flashed since Wednesday. There is an **unflashed build** in
 `firmware/hub/build/` carrying the SCD41 probe-based wake and an I²C bus scan that
 settles whether CO₂ is a firmware or a wiring problem.
 
-- [ ] **M** `cd firmware/hub && idf.py -p /dev/ttyACM0 flash monitor` (5 min)
-- [ ] **M** Send the `omni_i2c: bus scan:` line — it prints every address that answers
+- [x] **M** Remove the radar, and use PIR for occupancy
+- [x] **M** `cd firmware/hub && idf.py -p /dev/ttyACM0 flash monitor` (5 min)
+- [x] **M** Send the `omni_i2c: bus scan:` line — it prints every address that answers
   - `0x23 0x3C 0x44 0x62` → all four present, CO₂ is firmware, C fixes it
   - `0x62` missing → the SCD41 is not answering; reseat its power and ground jumpers first
-- [ ] **M** Walk toward the radar, confirm `target at N cm -> zone` appears
-- [ ] **M** **Fill in [enclosure/DIMENSIONS.md](../enclosure/DIMENSIONS.md) with calipers** (30 min)
+
+- [x] **M** **Fill in [enclosure/DIMENSIONS.md](../enclosure/DIMENSIONS.md) with calipers** (30 min)
       — the one thing today that everything downstream waits on
-- [ ] **M** Print a 20 mm calibration cube with 3 mm and 4 mm holes, measure them (10 min)
+
 - [ ] **C** Write `enclosure/ENCLOSURE_SPEC.md` as soon as the measurements land
-- [ ] **C** Fix whatever the bus scan reveals
-- [ ] **M** Reflash, confirm a real ppm figure
+- [x] **C** Fix whatever the bus scan reveals
+- [x] **M** Reflash, confirm a real ppm figure
 - [ ] **M** Remove the device from Home Assistant and **recommission** — the endpoint
       attributes changed and HA caches the cluster layout from the interview
 - [ ] **M** Confirm all five entities appear: temperature, humidity, illuminance, CO₂, occupancy
 - [ ] **M** If there is any evening left: create the Altium project and pull library parts
 
+- [ ] **M** Add back the radar, walk toward the radar, confirm `target at N cm -> zone` appears
 ---
 
 ## Saturday 5 September — model and print
