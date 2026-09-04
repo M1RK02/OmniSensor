@@ -31,6 +31,13 @@
 #include <app/icd/server/ICDNotifier.h>
 #endif
 
+#include <app/clusters/air-quality-server/AirQualityCluster.h>
+#include <app/clusters/illuminance-measurement-server/IlluminanceMeasurementCluster.h>
+#include <app/clusters/occupancy-sensor-server/OccupancySensingCluster.h>
+#include <app/clusters/relative-humidity-measurement-server/RelativeHumidityMeasurementCluster.h>
+#include <app/clusters/temperature-measurement-server/TemperatureMeasurementCluster.h>
+#include <data_model_provider/esp_matter_data_model_provider.h>
+
 static const char *TAG = "omni_hub";
 
 using namespace esp_matter;
@@ -112,8 +119,8 @@ static uint16_t lux_to_matter(float lux)
         return 0;
     }
     double encoded = 10000.0 * log10((double)lux) + 1.0;
-    if (encoded > 0xFFFE) {
-        encoded = 0xFFFE;
+    if (encoded > 65533.0) {
+        encoded = 65533.0;
     }
     return (uint16_t)encoded;
 }
@@ -124,10 +131,24 @@ static void report_temperature(float celsius)
     uint16_t endpoint_id = s_endpoint.temperature;
     VerifyOrReturn(endpoint_id != 0);
     chip::DeviceLayer::SystemLayer().ScheduleLambda([endpoint_id, celsius]() {
-        nullable<int16_t> measured((int16_t)(celsius * 100));
+        int16_t raw_val = (int16_t)(celsius * 100);
+        if (raw_val < -4000) raw_val = -4000;
+        if (raw_val > 12500) raw_val = 12500;
+        nullable<int16_t> measured(raw_val);
         esp_matter_attr_val_t val = esp_matter_nullable_int16(measured);
         attribute::update(endpoint_id, TemperatureMeasurement::Id,
                           TemperatureMeasurement::Attributes::MeasuredValue::Id, &val);
+
+        auto *iface = esp_matter::data_model::provider::get_instance().registry().Get(
+            chip::app::ConcreteClusterPath(endpoint_id, TemperatureMeasurement::Id));
+        if (iface) {
+            auto *cluster = static_cast<chip::app::Clusters::TemperatureMeasurementCluster *>(iface);
+            if (cluster->GetMinMeasuredValue().IsNull()) {
+                LogErrorOnFailure(cluster->SetMeasuredValueRange(chip::app::DataModel::MakeNullable((int16_t)-4000),
+                                                                 chip::app::DataModel::MakeNullable((int16_t)12500)));
+            }
+            LogErrorOnFailure(cluster->SetMeasuredValue(chip::app::DataModel::MakeNullable(raw_val)));
+        }
     });
 }
 
@@ -137,10 +158,21 @@ static void report_humidity(float percent)
     uint16_t endpoint_id = s_endpoint.humidity;
     VerifyOrReturn(endpoint_id != 0);
     chip::DeviceLayer::SystemLayer().ScheduleLambda([endpoint_id, percent]() {
-        nullable<uint16_t> measured((uint16_t)(percent * 100));
+        float p = percent;
+        if (p < 0.0f) p = 0.0f;
+        if (p > 100.0f) p = 100.0f;
+        uint16_t raw_val = (uint16_t)(p * 100);
+        nullable<uint16_t> measured(raw_val);
         esp_matter_attr_val_t val = esp_matter_nullable_uint16(measured);
         attribute::update(endpoint_id, RelativeHumidityMeasurement::Id,
                           RelativeHumidityMeasurement::Attributes::MeasuredValue::Id, &val);
+
+        auto *iface = esp_matter::data_model::provider::get_instance().registry().Get(
+            chip::app::ConcreteClusterPath(endpoint_id, RelativeHumidityMeasurement::Id));
+        if (iface) {
+            auto *cluster = static_cast<chip::app::Clusters::RelativeHumidityMeasurementCluster *>(iface);
+            LogErrorOnFailure(cluster->SetMeasuredValue(chip::app::DataModel::MakeNullable(raw_val)));
+        }
     });
 }
 
@@ -155,7 +187,37 @@ static void report_illuminance(float lux)
         esp_matter_attr_val_t val = esp_matter_nullable_uint16(measured);
         attribute::update(endpoint_id, IlluminanceMeasurement::Id,
                           IlluminanceMeasurement::Attributes::MeasuredValue::Id, &val);
+
+        auto *iface = esp_matter::data_model::provider::get_instance().registry().Get(
+            chip::app::ConcreteClusterPath(endpoint_id, IlluminanceMeasurement::Id));
+        if (iface) {
+            auto *cluster = static_cast<chip::app::Clusters::IlluminanceMeasurementCluster *>(iface);
+            if (cluster->GetMinMeasuredValue().IsNull()) {
+                LogErrorOnFailure(cluster->SetMeasuredValueRange(chip::app::DataModel::MakeNullable((uint16_t)1),
+                                                                 chip::app::DataModel::MakeNullable((uint16_t)65533)));
+            }
+            LogErrorOnFailure(cluster->SetMeasuredValue(chip::app::DataModel::MakeNullable(encoded)));
+        }
     });
+}
+
+static AirQuality::AirQualityEnum co2_to_air_quality(uint16_t ppm)
+{
+    if (ppm == 0) {
+        return AirQuality::AirQualityEnum::kUnknown;
+    } else if (ppm < 800) {
+        return AirQuality::AirQualityEnum::kGood;
+    } else if (ppm < 1000) {
+        return AirQuality::AirQualityEnum::kFair;
+    } else if (ppm < 1500) {
+        return AirQuality::AirQualityEnum::kModerate;
+    } else if (ppm < 2000) {
+        return AirQuality::AirQualityEnum::kPoor;
+    } else if (ppm < 3000) {
+        return AirQuality::AirQualityEnum::kVeryPoor;
+    } else {
+        return AirQuality::AirQualityEnum::kExtremelyPoor;
+    }
 }
 
 static void report_co2(uint16_t ppm)
@@ -168,6 +230,13 @@ static void report_co2(uint16_t ppm)
         esp_matter_attr_val_t val = esp_matter_nullable_float(concentration);
         attribute::update(endpoint_id, CarbonDioxideConcentrationMeasurement::Id,
                           CarbonDioxideConcentrationMeasurement::Attributes::MeasuredValue::Id, &val);
+
+        auto *iface = esp_matter::data_model::provider::get_instance().registry().Get(
+            chip::app::ConcreteClusterPath(endpoint_id, AirQuality::Id));
+        if (iface) {
+            auto *aq_cluster = static_cast<chip::app::Clusters::AirQualityCluster *>(iface);
+            aq_cluster->SetAirQuality(co2_to_air_quality(ppm));
+        }
     });
 }
 
@@ -181,6 +250,13 @@ static void report_occupancy(bool occupied)
         esp_matter_attr_val_t val = esp_matter_bitmap8(occupied ? 0x01 : 0x00);
         attribute::update(endpoint_id, OccupancySensing::Id,
                           OccupancySensing::Attributes::Occupancy::Id, &val);
+
+        auto *iface = esp_matter::data_model::provider::get_instance().registry().Get(
+            chip::app::ConcreteClusterPath(endpoint_id, OccupancySensing::Id));
+        if (iface) {
+            auto *cluster = static_cast<chip::app::Clusters::OccupancySensingCluster *>(iface);
+            cluster->SetOccupancy(occupied);
+        }
     });
 }
 
@@ -212,7 +288,16 @@ static void publish_current_state(void)
         report_illuminance(st.lux);
         if (st.co2_ppm > 0) {
             report_co2(st.co2_ppm);
+        } else {
+            report_co2(400);
         }
+    } else {
+        /* Provide initial non-null defaults so controllers (e.g. Home Assistant)
+         * immediately discover all sensor entities rather than seeing Null. */
+        report_temperature(20.0f);
+        report_humidity(50.0f);
+        report_illuminance(1.0f);
+        report_co2(400);
     }
     report_occupancy(st.occupied);
 }
@@ -318,7 +403,7 @@ static void open_commissioning_window_if_necessary()
     VerifyOrReturn(commission_mgr.IsCommissioningWindowOpen() == false);
 
     CHIP_ERROR err = commission_mgr.OpenBasicCommissioningWindow(
-        chip::System::Clock::Seconds16(300), chip::CommissioningWindowAdvertisement::kDnssdOnly);
+        chip::System::Clock::Seconds16(300), chip::CommissioningWindowAdvertisement::kAllSupported);
     if (err != CHIP_NO_ERROR) {
         ESP_LOGE(TAG, "Failed to open commissioning window: %" CHIP_ERROR_FORMAT, err.Format());
     }
@@ -329,6 +414,7 @@ static void app_event_cb(const ChipDeviceEvent *event, intptr_t arg)
     switch (event->Type) {
     case chip::DeviceLayer::DeviceEventType::kCommissioningComplete:
         ESP_LOGI(TAG, "Commissioning complete");
+        omni_stay_awake(false);
         break;
     case chip::DeviceLayer::DeviceEventType::kFailSafeTimerExpired:
         ESP_LOGI(TAG, "Commissioning failed, fail safe timer expired");
@@ -444,16 +530,18 @@ extern "C" void app_main()
     node_t *node = node::create(&node_config, app_attribute_update_cb, app_identification_cb);
     ABORT_APP_ON_FAILURE(node != nullptr, ESP_LOGE(TAG, "Failed to create Matter node"));
 
-    /* MinMeasuredValue and MaxMeasuredValue are mandatory and default to null,
-     * which tells a controller nothing about what the sensor can actually
-     * measure. Home Assistant creates no entity for a cluster whose range it
-     * cannot establish, which is why only the two endpoints configured by hand
-     * below showed up. Declare the ranges from the datasheets. */
+    /* MinMeasuredValue and MaxMeasuredValue are mandatory and default to null.
+     * Furthermore, Home Assistant skips discovery of sensor entities whose
+     * primary MeasuredValue attribute is null at discovery time.
+     * Provide datasheet ranges and non-null initial values so controllers
+     * reliably discover every sensor endpoint immediately. */
     temperature_sensor::config_t temperature_config;
     temperature_config.temperature_measurement.min_measured_value =
         nullable<int16_t>(-4000);   /* SHT40: -40.00 C */
     temperature_config.temperature_measurement.max_measured_value =
         nullable<int16_t>(12500);   /* SHT40: +125.00 C */
+    temperature_config.temperature_measurement.measured_value =
+        nullable<int16_t>(2000);    /* Initial 20.00 C until sensor reports */
     endpoint_t *temperature_ep = temperature_sensor::create(node, &temperature_config, ENDPOINT_FLAG_NONE, NULL);
     ABORT_APP_ON_FAILURE(temperature_ep != nullptr, ESP_LOGE(TAG, "Failed to create temperature endpoint"));
     s_endpoint.temperature = endpoint::get_id(temperature_ep);
@@ -463,6 +551,8 @@ extern "C" void app_main()
         nullable<uint16_t>(0);      /* 0.00 %RH */
     humidity_config.relative_humidity_measurement.max_measured_value =
         nullable<uint16_t>(10000);  /* 100.00 %RH */
+    humidity_config.relative_humidity_measurement.measured_value =
+        nullable<uint16_t>(5000);   /* Initial 50.00 %RH until sensor reports */
     endpoint_t *humidity_ep = humidity_sensor::create(node, &humidity_config, ENDPOINT_FLAG_NONE, NULL);
     ABORT_APP_ON_FAILURE(humidity_ep != nullptr, ESP_LOGE(TAG, "Failed to create humidity endpoint"));
     s_endpoint.humidity = endpoint::get_id(humidity_ep);
@@ -470,7 +560,8 @@ extern "C" void app_main()
     light_sensor::config_t illuminance_config;
     /* Log encoded, same as MeasuredValue: 1 lux -> 1, 65535 lux -> 48165. */
     illuminance_config.illuminance_measurement.min_measured_value = nullable<uint16_t>(1);
-    illuminance_config.illuminance_measurement.max_measured_value = nullable<uint16_t>(48165);
+    illuminance_config.illuminance_measurement.max_measured_value = nullable<uint16_t>(65533);
+    illuminance_config.illuminance_measurement.measured_value = nullable<uint16_t>(1); /* Initial 1 lux */
     endpoint_t *illuminance_ep = light_sensor::create(node, &illuminance_config, ENDPOINT_FLAG_NONE, NULL);
     ABORT_APP_ON_FAILURE(illuminance_ep != nullptr, ESP_LOGE(TAG, "Failed to create illuminance endpoint"));
     s_endpoint.illuminance = endpoint::get_id(illuminance_ep);
@@ -478,9 +569,22 @@ extern "C" void app_main()
     /* CO2 has no standalone device type: it is a concentration measurement
      * cluster hung off an Air Quality Sensor endpoint. */
     air_quality_sensor::config_t air_quality_config;
+    air_quality_config.air_quality.air_quality =
+        chip::to_underlying(AirQuality::AirQualityEnum::kGood);
     endpoint_t *air_quality_ep = air_quality_sensor::create(node, &air_quality_config, ENDPOINT_FLAG_NONE, NULL);
     ABORT_APP_ON_FAILURE(air_quality_ep != nullptr, ESP_LOGE(TAG, "Failed to create air quality endpoint"));
     s_endpoint.air_quality = endpoint::get_id(air_quality_ep);
+    {
+        /* Enable feature bits for Fair (0x01), Moderate (0x02), Very Poor (0x04), Extremely Poor (0x08) */
+        cluster_t *aq_cluster = cluster::get(air_quality_ep, AirQuality::Id);
+        if (aq_cluster) {
+            attribute_t *feat = attribute::get(aq_cluster, chip::app::Clusters::Globals::Attributes::FeatureMap::Id);
+            if (feat) {
+                esp_matter_attr_val_t feat_val = esp_matter_bitmap32(0x0F);
+                attribute::set_val(feat, &feat_val, false);
+            }
+        }
+    }
     {
         cluster::carbon_dioxide_concentration_measurement::config_t co2_config;
         co2_config.feature_flags =
@@ -488,6 +592,9 @@ extern "C" void app_main()
         /* Measurement medium 0 = Air. */
         co2_config.measurement_medium = 0;
         co2_config.features.numeric_measurement.measurement_unit = 1;  /* PPM */
+        co2_config.features.numeric_measurement.min_measured_value = nullable<float>(400.0f);
+        co2_config.features.numeric_measurement.max_measured_value = nullable<float>(5000.0f);
+        co2_config.features.numeric_measurement.measured_value = nullable<float>(400.0f);
         cluster_t *co2_cluster = cluster::carbon_dioxide_concentration_measurement::create(
             air_quality_ep, &co2_config, CLUSTER_FLAG_SERVER);
         ABORT_APP_ON_FAILURE(co2_cluster != nullptr, ESP_LOGE(TAG, "Failed to create CO2 cluster"));
@@ -555,6 +662,12 @@ extern "C" void app_main()
 
     err = esp_matter::start(app_event_cb);
     ABORT_APP_ON_FAILURE(err == ESP_OK, ESP_LOGE(TAG, "Failed to start Matter: %d", err));
+
+    /* Hold CPU and radio awake while uncommissioned so light sleep does not disrupt BLE / Thread discovery. */
+    if (chip::Server::GetInstance().GetFabricTable().FabricCount() == 0) {
+        ESP_LOGI(TAG, "Uncommissioned — holding wake lock during commissioning window");
+        omni_stay_awake(true);
+    }
 
     /* Reporting opens only now. Anything the tasks measured while the stack was
      * coming up is already in shared state, so publish that snapshot rather

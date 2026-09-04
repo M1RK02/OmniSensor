@@ -33,6 +33,8 @@ extern "C" {
 #define OMNI_PIN_BATT_SENSE     GPIO_NUM_0   /* D0/A0, ADC1_CH0, 2x100k divider */
 #define OMNI_PIN_BUTTON         GPIO_NUM_1   /* D1, LP_GPIO1, wake-capable, active LOW */
 #define OMNI_PIN_STATUS_LED     GPIO_NUM_15  /* on-board user LED */
+#define OMNI_PIN_RF_SWITCH_EN   GPIO_NUM_3   /* RF switch enable, active LOW (Seeed XIAO module internal) */
+#define OMNI_PIN_RF_ANT_SEL     GPIO_NUM_14  /* Antenna select: 0 = internal ceramic, 1 = external U.FL */
 
 /* I2C device addresses (verified conflict-free in Milestone 1) */
 #define OMNI_ADDR_BH1750        0x23

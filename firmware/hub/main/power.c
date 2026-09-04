@@ -108,6 +108,35 @@ static esp_err_t battery_adc_init(void)
     return ESP_OK;
 }
 
+static esp_err_t rf_switch_init(void)
+{
+    gpio_config_t io_conf = {
+        .pin_bit_mask = (1ULL << OMNI_PIN_RF_SWITCH_EN) | (1ULL << OMNI_PIN_RF_ANT_SEL),
+        .mode = GPIO_MODE_OUTPUT,
+        .pull_up_en = GPIO_PULLUP_DISABLE,
+        .pull_down_en = GPIO_PULLDOWN_DISABLE,
+        .intr_type = GPIO_INTR_DISABLE,
+    };
+    esp_err_t err = gpio_config(&io_conf);
+    if (err != ESP_OK) {
+        ESP_LOGE(TAG, "failed to configure RF switch GPIOs: %s", esp_err_to_name(err));
+        return err;
+    }
+
+    /* Enable RF switch (active LOW on Seeed XIAO ESP32-C6) */
+    gpio_set_level(OMNI_PIN_RF_SWITCH_EN, 0);
+
+    /* Select internal ceramic antenna (0 = internal ceramic, 1 = external U.FL) */
+    gpio_set_level(OMNI_PIN_RF_ANT_SEL, 0);
+
+    /* Exempt these pins from sleep isolation so the RF path remains intact */
+    gpio_sleep_sel_dis(OMNI_PIN_RF_SWITCH_EN);
+    gpio_sleep_sel_dis(OMNI_PIN_RF_ANT_SEL);
+
+    ESP_LOGI(TAG, "RF switch enabled (internal ceramic antenna selected)");
+    return ESP_OK;
+}
+
 esp_err_t omni_power_init(void)
 {
 #if CONFIG_PM_ENABLE
@@ -116,6 +145,8 @@ esp_err_t omni_power_init(void)
         s_active_lock = NULL;
     }
 #endif
+
+    rf_switch_init();
 
     return battery_adc_init();
 }

@@ -38,12 +38,12 @@ settles whether CO₂ is a firmware or a wiring problem.
 - [x] **M** **Fill in [enclosure/DIMENSIONS.md](../enclosure/DIMENSIONS.md) with calipers** (30 min)
       — the one thing today that everything downstream waits on
 
-- [ ] **C** Write `enclosure/ENCLOSURE_SPEC.md` as soon as the measurements land
+- [x] **C** Write `enclosure/ENCLOSURE_SPEC.md` as soon as the measurements land
 - [x] **C** Fix whatever the bus scan reveals
 - [x] **M** Reflash, confirm a real ppm figure
-- [ ] **M** Remove the device from Home Assistant and **recommission** — the endpoint
+- [x] **M** Remove the device from Home Assistant and **recommission** — the endpoint
       attributes changed and HA caches the cluster layout from the interview
-- [ ] **M** Confirm all five entities appear: temperature, humidity, illuminance, CO₂, occupancy
+- [x] **M** Confirm all five entities appear: temperature, humidity, illuminance, CO₂, occupancy
 - [ ] **M** If there is any evening left: create the Altium project and pull library parts
 
 - [ ] **M** Add back the radar, walk toward the radar, confirm `target at N cm -> zone` appears

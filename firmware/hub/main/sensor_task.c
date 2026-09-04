@@ -71,6 +71,12 @@ static void measure_once(void)
         evt.env.lux_valid = true;
     }
 
+    /* Post fast sensor readings immediately so display and Matter update without
+     * waiting 5 seconds for the SCD41 single-shot conversion to complete. */
+    if (evt.env.temp_valid || evt.env.humidity_valid || evt.env.lux_valid) {
+        omni_post_event(&evt);
+    }
+
     if (co2_is_due()) {
         uint16_t co2 = 0;
         float    scd_temp = 0.0f, scd_rh = 0.0f;
@@ -81,23 +87,21 @@ static void measure_once(void)
         scd41_wake_up();
 #endif
         if (scd41_measure_single_shot(&co2, &scd_temp, &scd_rh) == ESP_OK) {
-            evt.env.co2_ppm   = co2;
-            evt.env.co2_valid = true;
-            s_last_co2_us     = esp_timer_get_time();
+            omni_evt_t co2_evt = { .type = OMNI_EVT_ENV };
+            co2_evt.env.co2_ppm   = co2;
+            co2_evt.env.co2_valid = true;
+            s_last_co2_us         = esp_timer_get_time();
 
-            /* The SCD41 reports temperature and humidity too, but the SHT40 is
-             * the more accurate part (±0.2 °C vs ±0.8 °C) and sits further from
-             * the module's waste heat. Use the SCD41 only as a fallback —
-             * averaging two sensors of different accuracy just pollutes the
-             * better one. */
+            /* Use SCD41 temperature/humidity as fallback only if SHT40 failed. */
             if (!evt.env.temp_valid) {
-                evt.env.temp_c     = scd_temp;
-                evt.env.temp_valid = true;
+                co2_evt.env.temp_c     = scd_temp;
+                co2_evt.env.temp_valid = true;
             }
             if (!evt.env.humidity_valid) {
-                evt.env.humidity_pct   = scd_rh;
-                evt.env.humidity_valid = true;
+                co2_evt.env.humidity_pct   = scd_rh;
+                co2_evt.env.humidity_valid = true;
             }
+            omni_post_event(&co2_evt);
         }
 #if CONFIG_OMNI_BATTERY_PRESENT
         /* Park the sensor whether or not the measurement worked. Sleep mode is
@@ -110,13 +114,6 @@ static void measure_once(void)
 
     post_updating(false);
     omni_stay_awake(false);
-
-    if (evt.env.temp_valid || evt.env.humidity_valid ||
-        evt.env.lux_valid  || evt.env.co2_valid) {
-        omni_post_event(&evt);
-    } else {
-        ESP_LOGW(TAG, "measurement cycle produced no valid readings");
-    }
 }
 
 static void sensor_task(void *arg)
