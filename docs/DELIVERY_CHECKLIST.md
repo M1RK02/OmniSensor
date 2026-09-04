@@ -44,7 +44,6 @@ settles whether CO₂ is a firmware or a wiring problem.
 - [x] **M** Remove the device from Home Assistant and **recommission** — the endpoint
       attributes changed and HA caches the cluster layout from the interview
 - [x] **M** Confirm all five entities appear: temperature, humidity, illuminance, CO₂, occupancy
-- [ ] **M** If there is any evening left: create the Altium project and pull library parts
 
 - [ ] **M** Add back the radar, walk toward the radar, confirm `target at N cm -> zone` appears
 ---
@@ -57,6 +56,8 @@ settles whether CO₂ is a firmware or a wiring problem.
 - [ ] **M** Export STL to `enclosure/stl/` and STEP to `enclosure/cad/`
 - [ ] **M** Slice and check the preview: no supports through the radar window
 - [ ] **M** **Start the print before bed — this is the gate**
+- [ ]
+**M** Create the Altium project and pull library parts
 - [ ] **M** Altium schematic entry from [hardware/DESIGN_PACKAGE.md](../hardware/DESIGN_PACKAGE.md) §3
 - [ ] **M** Annotate, run ERC, get it clean
 - [ ] **C** Firmware stabilisation: anything still outstanding from Friday's flash
