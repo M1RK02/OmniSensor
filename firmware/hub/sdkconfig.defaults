@@ -59,8 +59,8 @@ CONFIG_FREERTOS_HZ=1000
 CONFIG_FREERTOS_USE_TICKLESS_IDLE=y
 # Note: CONFIG_PM_SLP_DISABLE_GPIO cannot be turned off here. On the C6,
 # ESP_SLEEP_GPIO_RESET_WORKAROUND defaults on for a documented ESD erratum and
-# selects it, and a select cannot be overridden. The radar pins are exempted
-# individually with gpio_sleep_sel_dis() instead — see drivers/ld2420.c.
+# selects it, and a select cannot be overridden. The I2C pins are exempted
+# individually with gpio_sleep_sel_dis() instead — see omni_i2c.c.
 CONFIG_IEEE802154_SLEEP_ENABLE=y
 
 # --- Matter ICD (Sleepy End Device) ----------------------------------------
@@ -93,6 +93,5 @@ CONFIG_BUTTON_PERIOD_TIME_MS=20
 CONFIG_BUTTON_LONG_PRESS_TIME_MS=5000
 
 # --- Console ----------------------------------------------------------------
-# The XIAO logs over the native USB-Serial/JTAG peripheral. This is now a
-# correctness requirement, not a convenience: UART1 belongs to the LD2420.
+# The XIAO logs over the native USB-Serial/JTAG peripheral.
 CONFIG_ESP_CONSOLE_USB_SERIAL_JTAG=y

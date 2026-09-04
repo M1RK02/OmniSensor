@@ -1,9 +1,4 @@
-/* Power management: the LD2420 load switch and the battery ADC.
- *
- * Load switch (docs/HARDWARE_DESIGN.md §2): a SI2301 P-MOSFET feeds the radar
- * rail only. Its gate is held by an external pull-up, so a floating control pin
- * — during boot, after a crash, or in sleep — leaves the rail OFF. Failure modes
- * fail toward low power. The GPIO drives the gate LOW to turn the rail ON.
+/* Power management and battery ADC.
  *
  * Battery ADC (project_description.md §7): 2x100k divider into GPIO0 with a
  * 100 nF reservoir, -12 dB attenuation, 32x multisampling, curve-fitting
@@ -45,11 +40,7 @@ static const char *TAG = "power";
 static adc_oneshot_unit_handle_t s_adc;
 static adc_cali_handle_t         s_cali;
 static bool                      s_cali_enabled;
-static bool                      s_radar_rail_on;
 #if CONFIG_PM_ENABLE
-/* Held while a presence session is active. The UART is not clocked during
- * light sleep, so anything the radar sends mid-sleep is lost outright — and
- * presence is exactly when we want to be awake. */
 static esp_pm_lock_handle_t      s_active_lock;
 #endif
 
@@ -119,27 +110,6 @@ static esp_err_t battery_adc_init(void)
 
 esp_err_t omni_power_init(void)
 {
-#if CONFIG_OMNI_LOAD_SWITCH_PRESENT
-    /* Drive the gate HIGH before anything else: rail OFF is the safe default. */
-    gpio_config_t rail_cfg = {
-        .intr_type    = GPIO_INTR_DISABLE,
-        .mode         = GPIO_MODE_OUTPUT,
-        .pin_bit_mask = 1ULL << OMNI_PIN_RADAR_EN,
-        .pull_down_en = GPIO_PULLDOWN_DISABLE,
-        .pull_up_en   = GPIO_PULLUP_DISABLE,
-    };
-    esp_err_t err = gpio_config(&rail_cfg);
-    if (err != ESP_OK) {
-        return err;
-    }
-    gpio_set_level(OMNI_PIN_RADAR_EN, 1);  /* active LOW -> 1 means OFF */
-#else
-    /* No load switch fitted: GPIO21 goes nowhere, so do not drive a pin that
-     * controls nothing. The radar is permanently powered on the breadboard. */
-    ESP_LOGI(TAG, "load switch not fitted — radar is permanently powered");
-#endif
-    s_radar_rail_on = false;
-
 #if CONFIG_PM_ENABLE
     if (esp_pm_lock_create(ESP_PM_NO_LIGHT_SLEEP, 0, "omni_active", &s_active_lock) != ESP_OK) {
         ESP_LOGW(TAG, "could not create the no-light-sleep lock");
@@ -163,23 +133,6 @@ void omni_stay_awake(bool hold)
         esp_pm_lock_release(s_active_lock);
     }
 #endif
-}
-
-void omni_radar_rail_set(bool on)
-{
-    if (on == s_radar_rail_on) {
-        return;
-    }
-    /* Hold it for the whole session: powering up, streaming, powering down. */
-    omni_stay_awake(on);
-
-#if CONFIG_OMNI_LOAD_SWITCH_PRESENT
-    gpio_set_level(OMNI_PIN_RADAR_EN, on ? 0 : 1);
-    ESP_LOGI(TAG, "radar rail %s", on ? "ON" : "OFF");
-#else
-    ESP_LOGI(TAG, "presence session %s", on ? "started" : "ended");
-#endif
-    s_radar_rail_on = on;
 }
 
 esp_err_t omni_battery_sample(uint16_t *mv_out, uint8_t *pct_out)

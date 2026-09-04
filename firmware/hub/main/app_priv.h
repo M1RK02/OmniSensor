@@ -29,12 +29,9 @@ extern "C" {
  * ========================================================================== */
 #define OMNI_PIN_I2C_SDA        GPIO_NUM_22  /* D4 */
 #define OMNI_PIN_I2C_SCL        GPIO_NUM_23  /* D5 */
-#define OMNI_PIN_RADAR_TX       GPIO_NUM_16  /* D6 */
-#define OMNI_PIN_RADAR_RX       GPIO_NUM_17  /* D7 */
 #define OMNI_PIN_PIR            GPIO_NUM_2   /* D2, LP_GPIO2, wake-capable, active HIGH */
 #define OMNI_PIN_BATT_SENSE     GPIO_NUM_0   /* D0/A0, ADC1_CH0, 2x100k divider */
 #define OMNI_PIN_BUTTON         GPIO_NUM_1   /* D1, LP_GPIO1, wake-capable, active LOW */
-#define OMNI_PIN_RADAR_EN       GPIO_NUM_21  /* D3, active LOW to SI2301 gate, ext. pull-up */
 #define OMNI_PIN_STATUS_LED     GPIO_NUM_15  /* on-board user LED */
 
 /* I2C device addresses (verified conflict-free in Milestone 1) */
@@ -53,12 +50,8 @@ extern "C" {
 #define OMNI_ENV_INTERVAL_MS         (60 * 1000)
 /* Battery is slow-moving; sample rarely and always before radio activity. */
 #define OMNI_BATT_INTERVAL_MS        (10 * 60 * 1000)
-/* No presence for this long -> radar rail off, display asleep, back to idle. */
+/* No presence for this long -> back to idle. */
 #define OMNI_INACTIVITY_TIMEOUT_MS   (30 * 1000)
-
-/* Zone boundaries in centimetres (project_description.md §9). */
-#define OMNI_ZONE1_MAX_CM        70
-#define OMNI_ZONE2_MAX_CM        140
 
 /* ==========================================================================
  * Task priorities — all strictly below the Matter/OpenThread stack.
@@ -67,7 +60,7 @@ extern "C" {
  * ========================================================================== */
 #define OMNI_PRIO_STATE_OWNER    4
 #define OMNI_PRIO_SENSOR         3
-#define OMNI_PRIO_RADAR          3
+#define OMNI_PRIO_PRESENCE       3
 #define OMNI_PRIO_UI             3
 #define OMNI_PRIO_BATTERY        2
 
@@ -99,7 +92,7 @@ typedef struct {
  * ========================================================================== */
 typedef enum {
     OMNI_EVT_ENV,        /* new environmental readings */
-    OMNI_EVT_PRESENCE,   /* new zone / occupancy from radar or PIR */
+    OMNI_EVT_PRESENCE,   /* new occupancy from PIR */
     OMNI_EVT_BATTERY,    /* new battery reading */
     OMNI_EVT_UPDATING,   /* measurement cycle started/finished (UI hint) */
 } omni_evt_type_t;
@@ -120,8 +113,7 @@ typedef struct {
         struct {
             omni_zone_t zone;
             bool        occupied;
-            /* The PIR knows something moved but not where. When false the state
-             * owner keeps whatever zone the radar last reported. */
+            /* PIR does not provide a distance zone. */
             bool        zone_valid;
         } presence;
         struct {
@@ -158,17 +150,14 @@ esp_err_t omni_sensor_task_start(void);
 /* Ask the sensor task for an immediate refresh (e.g. on a presence wake). */
 void omni_sensor_request_refresh(void);
 
-/* Radar: LD2420 on UART_NUM_1, distance -> zone. */
-esp_err_t omni_radar_start(void);
-/* PIR: GPIO2 ISR -> presence event + wake. */
-esp_err_t omni_pir_start(void);
+/* PIR presence task: GPIO2 motion -> occupancy event + wake. */
+esp_err_t omni_presence_start(void);
 
 /* Display: SSD1315 on the always-on rail. */
 esp_err_t omni_display_start(void);
 
-/* Power: radar rail load switch + battery ADC. */
+/* Power management + battery ADC. */
 esp_err_t omni_power_init(void);
-void      omni_radar_rail_set(bool on);
 /* Hold the CPU out of light sleep. Nested calls are counted, so callers pair
  * true/false without coordinating with each other. Needed around any long bus
  * transaction: light sleep isolates GPIOs and stops clocking peripherals, so a

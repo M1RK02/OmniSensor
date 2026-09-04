@@ -495,13 +495,9 @@ extern "C" void app_main()
 
     occupancy_sensor::config_t occupancy_config;
     /* The cluster refuses to be created without at least one sensing feature.
-     * Declare both of ours: the SR602 is the trigger, the LD2420 the qualifier. */
+     * Occupancy is driven by the SR602 PIR. */
     occupancy_config.occupancy_sensing.feature_flags =
-        cluster::occupancy_sensing::feature::passive_infrared::get_id() |
-        cluster::occupancy_sensing::feature::radar::get_id();
-    /* The legacy type attribute predates mmWave and has no radar value, so it
-     * reports the PIR — the sensor that actually raises the event. The feature
-     * flags above are where the radar is advertised. */
+        cluster::occupancy_sensing::feature::passive_infrared::get_id();
     occupancy_config.occupancy_sensing.occupancy_sensor_type =
         chip::to_underlying(OccupancySensing::OccupancySensorTypeEnum::kPir);
     occupancy_config.occupancy_sensing.occupancy_sensor_type_bitmap =
@@ -541,10 +537,7 @@ extern "C" void app_main()
     if (omni_sensor_task_start() != ESP_OK) {
         ESP_LOGE(TAG, "Sensor task failed to start");
     }
-    if (omni_pir_start() != ESP_OK) {
-        ESP_LOGE(TAG, "PIR failed to start");
-    }
-    if (omni_radar_start() != ESP_OK) {
+    if (omni_presence_start() != ESP_OK) {
         ESP_LOGE(TAG, "Presence task failed to start");
     }
 #if CONFIG_OMNI_BATTERY_PRESENT

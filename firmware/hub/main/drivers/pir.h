@@ -1,15 +1,14 @@
 /* SR602 PIR — motion trigger on GPIO2, active HIGH.
  *
- * The PIR is the TRIGGER and the radar is the QUALIFIER (see
- * project_description.md §9). It draws almost nothing and can wake the SoC,
- * which is why it, not the radar, is the wake source.
+ * It draws almost nothing and can wake the SoC, which makes it suitable for
+ * the hub's occupancy signal.
  */
 #pragma once
 
 #include "esp_err.h"
 #include <stdbool.h>
 
-/* Configure the pin, install the ISR and arm it as a light-sleep wake source. */
+/* Configure the pin and arm it as a light-sleep wake source. */
 esp_err_t pir_init(void);
 
 /* Current pin level — used to avoid sleeping while the sensor is still asserted. */

@@ -9,15 +9,4 @@ menu "OmniSensor Configuration"
             reports mains/USB power, rather than publishing whatever noise an
             unconnected ADC pin happens to read. See docs/HARDWARE_DESIGN.md §3.
 
-    config OMNI_LOAD_SWITCH_PRESENT
-        bool "The SI2301 radar load switch is fitted"
-        default n
-        help
-            Enable once the SI2301 and its gate pull-up are actually wired to
-            GPIO21. With this off the radar is assumed to be permanently
-            powered, which is what a breadboard with plain jumper wires gives
-            you, and the firmware does not claim to be switching a rail that
-            is not there. The presence session still starts and stops the UART
-            either way. See hardware/DESIGN_PACKAGE.md §6.
-
 endmenu
