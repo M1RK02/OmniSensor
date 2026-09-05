@@ -18,7 +18,7 @@ The project produces **two hardware artifacts**, and only one of them physically
 | | PCB | Wired prototype |
 |---|---|---|
 | **Status** | Designed in Altium, **never fabricated** | Built and running |
-| **Lives in** | `hardware/altium/`, `hardware/gerbers/`, `hardware/pdf/` | `hardware/prototype/` |
+| **Lives in** | `hardware/altium/`, `hardware/outputs/` | `hardware/prototype/` |
 | **Purpose** | Documented design deliverable | The unit that gets demonstrated and measured |
 | **Contains** | Every design decision below, laid out in copper | All sensors cabled to the always-on 3V3 rail; the load switch and battery divider exist in the PCB design and firmware only |
 
@@ -252,11 +252,8 @@ multiple endpoints or a manufacturer-specific cluster. Undecided — see `projec
 
 Keep the repository tidy and reviewable:
 
-1. Export gerbers and drill files into **`hardware/gerbers/`** rather than leaving them in Altium's
-   default `Project Outputs for <name>/` directory.
-2. Export a **PDF of the schematic** into `hardware/pdf/`, so the design can be reviewed by anyone
-   without an Altium licence. This is worth doing even though the board is never fabricated — for a
-   design-only deliverable, the PDF *is* how most people will read it.
+1. Export gerbers, drill files, BOM, STEP 3D model, and schematic PDF into **`hardware/outputs/`** via an OutJob so the outputs are reproducible.
+2. The **PDF of the schematic** and **Gerber/STEP files** in `hardware/outputs/` allow the design to be reviewed by anyone without an Altium licence.
 3. Do not commit Altium's `History/` folder. It accumulates large zip blobs and is already excluded in
    `.gitignore`.
 

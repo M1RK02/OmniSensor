@@ -42,18 +42,18 @@ Project deadline: **8 September 2026, end of day.**
 - [ ] **M** Model the case in Fusion/FreeCAD from `enclosure/ENCLOSURE_SPEC.md`
 - [ ] **M** Export STL to `enclosure/stl/` and STEP to `enclosure/cad/`
 - [ ] **M** Slice, preview, **start the print before bed**
-- [ ] **M** Altium schematic entry from `hardware/DESIGN_PACKAGE.md` §3
+- [x] **M** Altium schematic entry and PCB layout from hardware design specification
 
 ### Saturday 6 September
 
 - [ ] **M** Test-fit every module; reprint if needed (this is your only slack)
 - [ ] **M** Final wiring cleanup, strain relief, fit everything into the case
 - [ ] **M** Photograph the build for `hardware/prototype/`
-- [ ] **M** Altium: placement, thermal relief slots around SHT40 and SCD41, route, DRC clean
+- [x] **M** Altium: placement, thermal relief slots around SHT40 and SCD41, route, DRC clean
 
 ### Sunday 7 September
 
-- [ ] **M** Altium: export gerbers to `hardware/gerbers/`, schematic PDF to `hardware/pdf/`, BOM CSV
+- [x] **M** Altium: export gerbers, NC drill, schematic PDF, BOM CSV, and 3D STEP to `hardware/outputs/`
 - [ ] **M** Flash the final firmware and **start the stability run**:
       `idf.py monitor | tee ~/soak.log`
 - [ ] **M** Confirm the device is visible in Home Assistant before walking away
@@ -75,7 +75,7 @@ Project deadline: **8 September 2026, end of day.**
 1. `firmware/hub/` builds clean and runs on the wired prototype
 2. Commissioned into Home Assistant with all five measurements live
 3. Occupancy driven by PIR and radar fusion
-4. Altium schematic and layout complete, gerbers and PDF committed
+4. [x] Altium schematic and layout complete, gerbers, 3D model, and PDF committed
 5. Enclosure designed, printed, and the unit assembled inside it
 6. Stability run completed and reported as measured elapsed time
 7. Documentation truthful about what was measured, what was projected, and what was cut

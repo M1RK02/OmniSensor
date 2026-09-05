@@ -339,7 +339,7 @@ These are unresolved and deliberately recorded rather than hidden:
    peripheral instead, but any build that routes the console back to UART0 will interleave log output
    with radar traffic and corrupt both. Moving the radar to `UART_NUM_1` is the correct long-term fix.
 2. **Unassigned GPIOs.** **Resolved** — RAIL_EN = D3 (GPIO21), BATT_SENSE = D0 (GPIO0), BOOT button = GPIO9.
-3. **I²C pull-up values.** **Resolved** — 3.3 kΩ specified in the PCB design (see `hardware/DESIGN_PACKAGE.md` §4).
+3. **I²C pull-up values.** **Resolved** — 3.3 kΩ specified in the PCB design (see `docs/HARDWARE_DESIGN.md`).
 4. **Zone reporting over Matter.** Occupancy Sensing carries a boolean. How to expose three distance
    zones — multiple endpoints, or a manufacturer-specific cluster — is undecided.
 5. **Sleep current is a target, not yet a measurement.** The ~7–10 µA figure is a design target; measurement requires the MOSFET and divider circuit which exist only in the PCB design.

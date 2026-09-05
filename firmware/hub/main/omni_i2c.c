@@ -23,8 +23,8 @@ esp_err_t omni_i2c_init(void)
         .clk_source                   = I2C_CLK_SRC_DEFAULT,
         .glitch_ignore_cnt            = 7,
         /* The wired prototype has no external pull-ups, so the internal ones
-         * (weak, tens of kOhm) carry the bus. The PCB specifies external 4.7k
-         * on the always-on rail — see hardware/DESIGN_PACKAGE.md. Leave this
+         * (weak, tens of kOhm) carry the bus. The PCB specifies external 3.3k
+         * on the always-on rail — see docs/HARDWARE_DESIGN.md. Leave this
          * enabled either way: it is harmless in parallel with a stiffer pull-up. */
         .flags.enable_internal_pullup = true,
     };

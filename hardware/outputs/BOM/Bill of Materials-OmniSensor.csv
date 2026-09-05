@@ -1,0 +1,15 @@
+Line #,Name,Description,Designator,Revision ID,Revision State,Revision Status,Manufacturer 1,Manufacturer Part Number 1,Manufacturer Lifecycle 1,Supplier 1,Supplier Part Number 1,Supplier Unit Price 1,Supplier Subtotal 1
+
+"","CC0603KRX7R9BB104","CAP CER 0.1UF 50V X7R 0603","C1, C3, C4, C5, C6, C7","CMP-2100-03601-2","New From Design","Up to date","Yageo Group","CC0603KRX7R9BB104","Volume Production","Mouser","603-CC603KRX7R9BB104","0.03616","0.36163"
+"","GRM31CR60J107ME39L","Chip Capacitor, 100 uF, +/- 20%, 6.3 V, -55 to 85 degC, 1206 (3216 Metric), RoHS, Tape and Reel","C2","CMP-1662-00011-2","Released","Up to date","Murata","GRM31CR60J107ME39L","Volume Production","Arrow Electronics","GRM31CR60J107ME39L","0.55097","8.82"
+"","GRM21BR61A106KE19L","CAP, Ceramic, 10 uF, 10%, 10 V, 0805, RoHS, Tape and Reel","C8, C9","CMP-2000-05254-1","Released","Up to date","Murata","GRM21BR61A106KE19L","End of Life","","","",""
+"","S2B-PH-K-S(LF)(SN)","Male Header, Pitch 2 mm, 1 x 2 Position, Height 4.8 mm, Tail Length 3.4 mm, -25 to 85 degC, RoHS, Bulk","J_BATT","CMP-1755-00004-1","Released","Up to date","JST","S2B-PH-K-S(LF)(SN)","Volume Production","Mouser","306-S2BPHKSLFSNPP","0.09471","0.09471"
+"","61300411121","THT Vertical Pin Header WR-PHD, Pitch 2.54 mm, Single Row, 4 pins","J_BH1750, J_OLED, J_RADAR","CMP-1502-01064-4","Released","Up to date","Wurth Elektronik","61300411121","Volume Production","DigiKey","732-5317-ND","0.15499","0.46496"
+"","61300311121","THT Vertical Pin Header WR-PHD, Pitch 2.54 mm, Single Row, 3 pins","J_PIR","CMP-1502-01062-4","Released","Up to date","Wurth Elektronik","61300311121","Volume Production","Mouser","710-61300311121","0.11193","0.11193"
+"","SSQ-107-01-T-S","SQ Post Socket, Through-hole, Vertical, -55 to 105 degC, 2.54 mm Pitch, 7-Pin, Female, RoHS","J_XIAO_L, J_XIAO_R","CMP-1023-00285-1","Released","Up to date","Samtec","SSQ-107-01-T-S","Volume Production","Avnet","SSQ-107-01-T-S","0.82685","1.65"
+"","5000","PC TEST POINT MINIATURE RED","POGO1, POGO2","CMP-19636-000027-1","New From Design","Up to date","Keystone","5000","Volume Production","Mouser","534-5000","0.19804","0.39607"
+"","DMP2004K-7","MOSFET P-CH 20V 600MA SOT23-3","Q1","CMP-12801-000029-1","New From Design","Up to date","Diodes Inc.","DMP2004K-7","Volume Production","Arrow Electronics","DMP2004K-7","0.2497","0.2497"
+"","RC0603FR-073K3L","","R1, R2","CMP-1012-00567-3","Released","Up to date","Vishay","CRCW06033K30FKTA","Volume Production","Arrow Electronics","CRCW06033K30FKTA","0.01137","0.02273"
+"","RC0603FR-07100KL","RES SMD 100K OHM 1% 1/10W 0603","R3, R4, R5, R6","CMP-2100-03662-2","Released","Up to date","Yageo Group","RC0603FR-07100KL","Volume Production","Mouser","603-RC0603FR-07100KL","0.01205","0.12054"
+"","SHT40-AD1B-R2","SENSOR HUMIDITY 100 RH SMD","U2","CMP-144040-000008-1","New From Design","Up to date","Sensirion","SHT40-AD1B-R2","Volume Production","Newark","SHT40-AD1B-R2","1.58","1.58"
+"","SCD41-D-R1","CO2 SENSOR 40 PPM I2C SMD","U3","CMP-144026-000007-1","New From Design","Up to date","Sensirion","SCD41-D-R1","Volume Production","DigiKey","1649-SCD41-D-R1CT-ND","19.28","19.28"
