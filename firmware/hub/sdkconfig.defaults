@@ -2,7 +2,7 @@
 #
 # Merged from esp-matter examples/sensors (Matter/partition/BLE basics) and
 # examples/icd_app (Thread MTD + ICD + light-sleep power management).
-# See docs/SETUP.md and project_description.md §6.
+# See docs/SOFTWARE_DESIGN.md and project_description.md §6.
 
 CONFIG_IDF_TARGET="esp32c6"
 CONFIG_ESPTOOLPY_FLASHSIZE_4MB=y

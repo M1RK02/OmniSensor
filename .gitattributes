@@ -19,6 +19,7 @@
 # Altium project files are INI-style text, authored on Windows.
 *.PrjPcb  text eol=crlf
 *.OutJob  text eol=crlf
+*.BomDoc  text eol=crlf
 
 # ---------------------------------------------------------------------------
 # Fabrication and CAD exports (committed: they are the hardware deliverable)

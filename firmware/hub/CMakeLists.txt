@@ -3,7 +3,7 @@
 cmake_minimum_required(VERSION 3.5)
 
 if(NOT DEFINED ENV{ESP_MATTER_PATH})
-    message(FATAL_ERROR "Please set ESP_MATTER_PATH to the path of esp-matter repo (run 'get_matter', see docs/SETUP.md)")
+    message(FATAL_ERROR "Please set ESP_MATTER_PATH to the path of esp-matter repo (run 'get_matter', see docs/SOFTWARE_DESIGN.md)")
 endif(NOT DEFINED ENV{ESP_MATTER_PATH})
 
 set(PROJECT_VER "1.0")

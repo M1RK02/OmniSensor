@@ -11,8 +11,8 @@ The design target is a device that spends almost all of its life in deep sleep, 
 microamps, and wakes instantly when someone walks in.
 
 > **Status:** Integrated firmware running. Matter commissioned against Home Assistant.
-> Enclosure and PCB design in progress.
-> See [docs/DELIVERY_CHECKLIST.md](docs/DELIVERY_CHECKLIST.md) for the schedule.
+> Altium 4-layer carrier board design and manufacturing outputs complete.
+> Enclosure 3D modeling in progress. See [docs/DELIVERY_CHECKLIST.md](docs/DELIVERY_CHECKLIST.md) for the schedule.
 
 ---
 
@@ -27,18 +27,18 @@ microamps, and wakes instantly when someone walks in.
 | SSD1315 | 128×64 monochrome OLED | I²C | `0x3C` |
 | Hi-Link LD2420 | 24 GHz mmWave presence radar | UART | TX 16 / RX 17 |
 | SR602 | PIR motion (deep-sleep wake source) | GPIO | `GPIO_NUM_2` |
-| Vishay SI2301 | P-MOSFET radar power switch | GPIO | D3 (GPIO21) |
+| Diodes Inc. DMP2004K / SI2301 | P-MOSFET radar power switch | GPIO | D3 (GPIO21) |
 | BOOT button | Factory reset + refresh | GPIO | GPIO9 (on-module) |
 
 Shared I²C bus on **SDA 22 / SCL 23**. Full pin map and electrical design in
-[project_description.md](project_description.md).
+[project_description.md](project_description.md) and [docs/HARDWARE_DESIGN.md](docs/HARDWARE_DESIGN.md).
 
 ## Repository layout
 
 ```
 OmniSensor/
 ├─ firmware/
-│  ├─ hub/                  # the integrated OmniSensor firmware (in progress)
+│  ├─ hub/                  # integrated OmniSensor firmware (Matter over Thread)
 │  └─ examples/             # standalone, one-sensor-at-a-time validation projects
 │     ├─ sr602/             # PIR + GPIO deep-sleep wakeup
 │     ├─ sht40/             # temperature + humidity, CRC checked
@@ -47,18 +47,21 @@ OmniSensor/
 │     ├─ ld2420/            # mmWave radar over UART
 │     ├─ ssd1315/           # OLED bring-up
 │     └─ all/               # all seven together, with RTC-memory fast wake
-├─ hardware/                # Altium schematic + PCB (designed, not fabricated)
+├─ hardware/
+│  ├─ altium/               # Altium Designer project files (.PrjPcb, .SchDoc, .PcbDoc, .OutJob)
+│  ├─ datasheets/           # component reference sheets
+│  └─ outputs/              # Gerbers, NC drill, BOM CSV, 3D STEP, schematic PDF
 ├─ enclosure/               # 3D-printable case (CAD sources + STLs)
-└─ docs/                    # setup, hardware design, delivery schedule
+└─ docs/                    # software architecture, hardware design, delivery schedule
 ```
 
 ## Quick start
 
 Requires **ESP-IDF v5.4.3** targeting `esp32c6`. Full toolchain setup — including the Matter SDK —
-is in [docs/SETUP.md](docs/SETUP.md).
+is in [docs/SOFTWARE_DESIGN.md](docs/SOFTWARE_DESIGN.md).
 
 ```bash
-get_idf                                   # activates ESP-IDF (alias, see docs/SETUP.md)
+get_idf                                   # activates ESP-IDF (alias, see docs/SOFTWARE_DESIGN.md)
 cd firmware/examples/all
 idf.py set-target esp32c6
 idf.py build flash monitor
@@ -72,7 +75,7 @@ Start with `sht40` if you just want to confirm your toolchain and wiring work.
 | Document | Contents |
 |---|---|
 | [project_description.md](project_description.md) | Full technical description: architecture, BOM, pin map, power budget, Matter mapping |
-| [docs/SETUP.md](docs/SETUP.md) | ESP-IDF and Matter SDK installation, build/flash/monitor |
+| [docs/SOFTWARE_DESIGN.md](docs/SOFTWARE_DESIGN.md) | Firmware architecture, concurrency, presence/sensor subsystems, Matter model, and setup guide |
 | [docs/HARDWARE_DESIGN.md](docs/HARDWARE_DESIGN.md) | Power management, load switching, battery sensing, PCB and enclosure design |
 | [docs/DELIVERY_CHECKLIST.md](docs/DELIVERY_CHECKLIST.md) | Project schedule, scope, milestones and delivery plan |
 

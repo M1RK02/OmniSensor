@@ -9,7 +9,7 @@
 | **Toolchain** | ESP-IDF v5.4.3 + ESP-Matter SDK, target `esp32c6` |
 | **Author** | Mirko Pica |
 | **License** | MIT |
-| **Deadline** | 31 August 2026 |
+| **Deadline** | 8 September 2026 |
 
 ---
 
@@ -301,18 +301,16 @@ OmniSensor/
 │     ├─ sr602/ sht40/ bh1750/ scd41/ ld2420/ ssd1315/
 │     └─ all/               # all seven integrated, with RTC fast-wake UI
 ├─ hardware/
-│  ├─ altium/               # .PrjPcb, .SchDoc, .PcbDoc, libraries
-│  ├─ gerbers/              # fabrication export (committed deliverable)
-│  ├─ pdf/                  # schematic PDF, readable without Altium
-│  ├─ prototype/            # wiring table + photos of the built unit
-│  └─ datasheets/
+│  ├─ altium/               # .PrjPcb, .SchDoc, .PcbDoc, .BomDoc, .OutJob
+│  ├─ datasheets/           # manufacturer component datasheets
+│  └─ outputs/              # Gerbers, NC drill, BOM CSV, 3D STEP, schematic PDF
 ├─ enclosure/
 │  ├─ cad/                  # source model
 │  └─ stl/                  # printable meshes
 └─ docs/
-   ├─ SETUP.md
-   ├─ HARDWARE_DESIGN.md
-   └─ DELIVERY_CHECKLIST.md
+   ├─ SOFTWARE_DESIGN.md    # firmware architecture, Matter data model & setup guide
+   ├─ HARDWARE_DESIGN.md    # power management, load switching, battery sensing
+   └─ DELIVERY_CHECKLIST.md # schedule and delivery checklist
 ```
 
 Every example under `firmware/examples/` is an independent ESP-IDF project with its own
@@ -322,7 +320,7 @@ Every example under `firmware/examples/` is an independent ESP-IDF project with 
 
 **ESP-IDF v5.4.3** with the **ESP-Matter SDK**, targeting `esp32c6`. The firmware uses the modern
 `driver/i2c_master.h` bus API rather than the deprecated `driver/i2c.h`, so it will not compile against
-IDF versions older than 5.2. Full installation instructions are in [docs/SETUP.md](docs/SETUP.md).
+IDF versions older than 5.2. Full installation instructions are in [docs/SOFTWARE_DESIGN.md](docs/SOFTWARE_DESIGN.md).
 
 ## 16. Status
 
