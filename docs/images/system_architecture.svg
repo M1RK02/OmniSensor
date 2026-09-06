@@ -1,0 +1,273 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 530" width="100%" height="100%" style="background:#ffffff; font-family:'DejaVu Sans', 'Liberation Sans', Arial, sans-serif;">
+  <defs>
+    <marker id="arr-blue" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#2563eb"/>
+    </marker>
+    <marker id="arr-slate" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#475569"/>
+    </marker>
+    <marker id="arr-red" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#dc2626"/>
+    </marker>
+    <marker id="arr-green" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#16a34a"/>
+    </marker>
+    <marker id="arr-amber" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#d97706"/>
+    </marker>
+    <marker id="arr-purple" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#7c3aed"/>
+    </marker>
+    <marker id="arr-emerald" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#059669"/>
+    </marker>
+    <filter id="shadow" x="-2%" y="-2%" width="104%" height="106%" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="1" dy="2" stdDeviation="2" flood-color="#000000" flood-opacity="0.05"/>
+    </filter>
+  </defs>
+
+  <!-- Title & Subtitle -->
+  <text x="490" y="26" text-anchor="middle" font-size="16" font-weight="bold" fill="#0f172a">OmniSensor System Architecture &amp; Testbed Integration</text>
+  <text x="490" y="44" text-anchor="middle" font-size="11" fill="#64748b">End-to-End Sensing, Processing, Low-Power Thread Mesh, and Controller Testbed</text>
+
+  <!-- ==================== COLUMN 1: SENSING & INPUT LAYER ==================== -->
+  <rect x="20" y="65" width="225" height="445" rx="8" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.2" filter="url(#shadow)"/>
+  <rect x="20" y="65" width="225" height="28" rx="8" fill="#e2e8f0"/>
+  <rect x="20" y="81" width="225" height="12" fill="#e2e8f0"/>
+  <text x="132" y="84" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#334155">SENSING &amp; INPUT LAYER</text>
+
+  <!-- SR602 PIR -->
+  <g transform="translate(30, 100)">
+    <rect width="205" height="42" rx="5" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.2"/>
+    <text x="102" y="18" text-anchor="middle" font-size="11" font-weight="bold" fill="#1e3a8a">SR602 PIR Motion Sensor</text>
+    <text x="102" y="32" text-anchor="middle" font-size="9" fill="#2563eb">&lt;10ms Pyroelectric Wake | 15 µA</text>
+  </g>
+
+  <!-- HLK-LD2420 Radar -->
+  <g transform="translate(30, 155)">
+    <rect width="205" height="46" rx="5" fill="#fef2f2" stroke="#ef4444" stroke-width="1.2"/>
+    <text x="102" y="18" text-anchor="middle" font-size="11" font-weight="bold" fill="#991b1b">HLK-LD2420 FMCW Radar</text>
+    <text x="102" y="31" text-anchor="middle" font-size="9" fill="#dc2626">24 GHz mmWave Multi-Gate | 65 mA</text>
+    <text x="102" y="42" text-anchor="middle" font-size="8" fill="#991b1b">VCC: +3V3_SW | TX:16 / RX:17</text>
+  </g>
+
+  <!-- Sensirion SHT40 -->
+  <g transform="translate(30, 215)">
+    <rect width="205" height="42" rx="5" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.2"/>
+    <text x="102" y="18" text-anchor="middle" font-size="11" font-weight="bold" fill="#166534">Sensirion SHT40</text>
+    <text x="102" y="32" text-anchor="middle" font-size="9" fill="#15803d">Temp ±0.2°C &amp; RH ±1.8% | Isolated Island</text>
+  </g>
+
+  <!-- Sensirion SCD41 -->
+  <g transform="translate(30, 270)">
+    <rect width="205" height="42" rx="5" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.2"/>
+    <text x="102" y="18" text-anchor="middle" font-size="11" font-weight="bold" fill="#166534">Sensirion SCD41</text>
+    <text x="102" y="32" text-anchor="middle" font-size="9" fill="#15803d">Photoacoustic CO₂ NDIR | Single-Shot</text>
+  </g>
+
+  <!-- ROHM BH1750 -->
+  <g transform="translate(30, 325)">
+    <rect width="205" height="42" rx="5" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.2"/>
+    <text x="102" y="18" text-anchor="middle" font-size="11" font-weight="bold" fill="#166534">ROHM BH1750</text>
+    <text x="102" y="32" text-anchor="middle" font-size="9" fill="#15803d">Ambient Illuminance (1–65535 lx)</text>
+  </g>
+
+  <!-- VBAT Divider -->
+  <g transform="translate(30, 380)">
+    <rect width="205" height="42" rx="5" fill="#fefce8" stroke="#eab308" stroke-width="1.2"/>
+    <text x="102" y="18" text-anchor="middle" font-size="11" font-weight="bold" fill="#854d0e">VBAT Voltage Divider</text>
+    <text x="102" y="32" text-anchor="middle" font-size="9" fill="#a16207">100k / 100k + 100nF (1.5–2.1 V)</text>
+  </g>
+
+  <!-- BOOT Button -->
+  <g transform="translate(30, 435)">
+    <rect width="205" height="42" rx="5" fill="#f8fafc" stroke="#64748b" stroke-width="1.2"/>
+    <text x="102" y="18" text-anchor="middle" font-size="11" font-weight="bold" fill="#334155">XIAO BOOT Button</text>
+    <text x="102" y="32" text-anchor="middle" font-size="9" fill="#475569">GPIO9 | Refresh &amp; Factory Reset</text>
+  </g>
+
+  <!-- ==================== COLUMN 2: CARRIER PCB & MCU ==================== -->
+  <rect x="290" y="65" width="350" height="445" rx="8" fill="#f8fafc" stroke="#818cf8" stroke-width="1.4" filter="url(#shadow)"/>
+  <rect x="290" y="65" width="350" height="28" rx="8" fill="#e0e7ff"/>
+  <rect x="290" y="81" width="350" height="12" fill="#e0e7ff"/>
+  <text x="465" y="84" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#3730a3">OMNISENSOR CARRIER PCB (4-LAYER)</text>
+
+  <!-- XIAO ESP32-C6 Core Block -->
+  <g transform="translate(305, 100)">
+    <rect width="320" height="140" rx="6" fill="#eef2ff" stroke="#4f46e5" stroke-width="1.4"/>
+    <text x="160" y="22" text-anchor="middle" font-size="12" font-weight="bold" fill="#312e81">Seeed Studio XIAO ESP32-C6</text>
+    <text x="160" y="38" text-anchor="middle" font-size="10" fill="#4338ca">RISC-V Core @ 160 MHz | 512 kB SRAM | 4 MB Flash</text>
+    <line x1="15" y1="46" x2="305" y2="46" stroke="#c7d2fe" stroke-width="1"/>
+    <text x="160" y="62" text-anchor="middle" font-size="9.5" fill="#3730a3">FreeRTOS Actor Model (Single-Writer Task)</text>
+    <text x="160" y="77" text-anchor="middle" font-size="9.5" fill="#3730a3">Presence Fusion Engine (PIR + 3-Zone FMCW)</text>
+    <text x="160" y="93" text-anchor="middle" font-size="9.5" fill="#3730a3">Fast-Wake UI Driver (&lt;50ms Display Restore)</text>
+    <text x="160" y="110" text-anchor="middle" font-size="10" font-weight="bold" fill="#4f46e5">Matter 1.3 Sleepy End Device (SED)</text>
+    <text x="160" y="125" text-anchor="middle" font-size="8.5" fill="#6366f1">IEEE 802.15.4 Thread Radio (Channel 15, PanID 0x1234)</text>
+  </g>
+
+  <!-- Sub-block 1: DMP2004K-7 Load Switch -->
+  <g transform="translate(305, 260)">
+    <rect width="152" height="65" rx="6" fill="#fff1f2" stroke="#e11d48" stroke-width="1.2"/>
+    <text x="76" y="18" text-anchor="middle" font-size="10.5" font-weight="bold" fill="#9f1239">Radar Power Switch</text>
+    <text x="76" y="33" text-anchor="middle" font-size="9" fill="#be123c">DMP2004K-7 P-MOSFET</text>
+    <text x="76" y="47" text-anchor="middle" font-size="8.5" fill="#be123c">G: GPIO21 (D3) | S: +3V3_AO</text>
+    <text x="76" y="58" text-anchor="middle" font-size="8.5" font-weight="bold" fill="#9f1239">D: +3V3_SW (0µA Sleep)</text>
+  </g>
+
+  <!-- Sub-block 2: SSD1315 OLED Display -->
+  <g transform="translate(473, 260)">
+    <rect width="152" height="65" rx="6" fill="#f0f9ff" stroke="#0284c7" stroke-width="1.2"/>
+    <text x="76" y="18" text-anchor="middle" font-size="10.5" font-weight="bold" fill="#075985">SSD1315 OLED</text>
+    <text x="76" y="33" text-anchor="middle" font-size="9" fill="#0369a1">128×64 Monochrome</text>
+    <text x="76" y="47" text-anchor="middle" font-size="8.5" fill="#0369a1">Shared I²C Bus (0x3C)</text>
+    <text x="76" y="58" text-anchor="middle" font-size="8.5" font-weight="bold" fill="#075985">On-Device UI Telemetry</text>
+  </g>
+
+  <!-- Sub-block 3: RTC Slow Memory Cache -->
+  <g transform="translate(305, 340)">
+    <rect width="152" height="58" rx="6" fill="#faf5ff" stroke="#9333ea" stroke-width="1.2"/>
+    <text x="76" y="18" text-anchor="middle" font-size="10.5" font-weight="bold" fill="#6b21a8">RTC Memory Cache</text>
+    <text x="76" y="33" text-anchor="middle" font-size="8.5" fill="#7e22ce">RTC_DATA_ATTR Struct</text>
+    <text x="76" y="47" text-anchor="middle" font-size="8.5" font-weight="bold" fill="#6b21a8">&lt;50ms Fast-Wake Buffer</text>
+  </g>
+
+  <!-- Sub-block 4: Thermal Island Island -->
+  <g transform="translate(473, 340)">
+    <rect width="152" height="58" rx="6" fill="#f1f5f9" stroke="#64748b" stroke-width="1" stroke-dasharray="3,3"/>
+    <text x="76" y="18" text-anchor="middle" font-size="10.5" font-weight="bold" fill="#334155">Thermal "Cold Peninsula"</text>
+    <text x="76" y="33" text-anchor="middle" font-size="8.5" fill="#475569">1.2 mm Milled Air Slot</text>
+    <text x="76" y="47" text-anchor="middle" font-size="8.5" fill="#475569">Prevents LDO Self-Heating</text>
+  </g>
+
+  <!-- Sub-block 5: 4-Layer Board Stackup -->
+  <g transform="translate(305, 412)">
+    <rect width="320" height="65" rx="6" fill="#f8fafc" stroke="#475569" stroke-width="1.2"/>
+    <text x="160" y="18" text-anchor="middle" font-size="10.5" font-weight="bold" fill="#1e293b">Altium 4-Layer Stackup &amp; Physical Design</text>
+    <text x="160" y="34" text-anchor="middle" font-size="9" fill="#334155">L1 Top Signal | L2 Solid GND | L3 Solid +3V3_AO | L4 Bottom Signal</text>
+    <text x="160" y="48" text-anchor="middle" font-size="9" fill="#334155">Dimensions: 70.0 × 50.0 mm | Inverted-F RF Void | 4× M3 Holes</text>
+    <text x="160" y="60" text-anchor="middle" font-size="8.5" font-weight="bold" fill="#16a34a">DRC Status: 0 Violations, 0 Warnings (Passed)</text>
+  </g>
+
+  <!-- ==================== COLUMN 3: TESTBED & CONTROLLER ==================== -->
+  <rect x="710" y="65" width="250" height="445" rx="8" fill="#f8fafc" stroke="#10b981" stroke-width="1.4" filter="url(#shadow)"/>
+  <rect x="710" y="65" width="250" height="28" rx="8" fill="#d1fae5"/>
+  <rect x="710" y="81" width="250" height="12" fill="#d1fae5"/>
+  <text x="835" y="84" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#065f46">TESTBED: HOME ASSISTANT (RPI 3B)</text>
+
+  <!-- ESP32-C6 Radio Co-Processor -->
+  <g transform="translate(725, 100)">
+    <rect width="220" height="68" rx="6" fill="#ecfdf5" stroke="#10b981" stroke-width="1.3"/>
+    <text x="110" y="20" text-anchor="middle" font-size="11" font-weight="bold" fill="#047857">ESP32-C6 Radio Co-Processor</text>
+    <text x="110" y="36" text-anchor="middle" font-size="9.5" fill="#059669">Flashed with ESP-IDF ot_rcp Firmware</text>
+    <text x="110" y="50" text-anchor="middle" font-size="9" fill="#047857">Thread Border Router Radio Node</text>
+    <text x="110" y="62" text-anchor="middle" font-size="8.5" font-weight="bold" fill="#059669">802.15.4 Channel 15 | PanID 0x1234</text>
+  </g>
+
+  <!-- Raspberry Pi 3B Host -->
+  <g transform="translate(725, 205)">
+    <rect width="220" height="85" rx="6" fill="#ecfdf5" stroke="#059669" stroke-width="1.4"/>
+    <text x="110" y="22" text-anchor="middle" font-size="12" font-weight="bold" fill="#064e3b">Raspberry Pi 3B Host</text>
+    <text x="110" y="38" text-anchor="middle" font-size="10" fill="#047857">Home Assistant OS (HAOS 2026.x)</text>
+    <line x1="15" y1="46" x2="205" y2="46" stroke="#a7f3d0" stroke-width="1"/>
+    <text x="110" y="60" text-anchor="middle" font-size="9.5" fill="#065f46">OpenThread Border Router Add-on</text>
+    <text x="110" y="74" text-anchor="middle" font-size="9.5" fill="#065f46">Matter Server Add-on (connectedhomeip)</text>
+  </g>
+
+  <!-- Discovered Entities -->
+  <g transform="translate(725, 325)">
+    <rect width="220" height="152" rx="6" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.1"/>
+    <text x="110" y="20" text-anchor="middle" font-size="10.5" font-weight="bold" fill="#1e293b">Discovered Live Matter Entities</text>
+    <line x1="15" y1="28" x2="205" y2="28" stroke="#e2e8f0" stroke-width="1"/>
+    <text x="15" y="46" font-size="9" fill="#15803d">● sensor.omnisensor_temperature (°C)</text>
+    <text x="15" y="63" font-size="9" fill="#15803d">● sensor.omnisensor_humidity (% RH)</text>
+    <text x="15" y="80" font-size="9" fill="#15803d">● sensor.omnisensor_illuminance (lx)</text>
+    <text x="15" y="97" font-size="9" fill="#15803d">● sensor.omnisensor_carbon_dioxide (ppm)</text>
+    <text x="15" y="114" font-size="9" fill="#2563eb">● binary_sensor.omnisensor_occupancy (0/1)</text>
+    <text x="15" y="131" font-size="9" fill="#ca8a04">● sensor.omnisensor_battery (%)</text>
+    <text x="110" y="146" text-anchor="middle" font-size="8" fill="#64748b">Verified in Home Assistant Dashboard</text>
+  </g>
+
+  <!-- ==================== EXPLICIT SIGNALS & INTERCONNECTIONS ==================== -->
+
+  <!-- 1. PIR -> MCU (GPIO2) -->
+  <path d="M 235 121 L 305 121" stroke="#2563eb" stroke-width="1.6" fill="none" marker-end="url(#arr-blue)"/>
+  <rect x="245" y="111" width="50" height="14" rx="3" fill="#eff6ff" stroke="#bfdbfe" stroke-width="0.8"/>
+  <text x="270" y="122" text-anchor="middle" font-size="8" font-weight="bold" fill="#1d4ed8">GPIO2</text>
+
+  <!-- 2. Radar -> MCU (UART0) -->
+  <path d="M 235 170 L 305 170" stroke="#475569" stroke-width="1.5" fill="none" marker-end="url(#arr-slate)"/>
+  <rect x="242" y="160" width="56" height="14" rx="3" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="0.8"/>
+  <text x="270" y="171" text-anchor="middle" font-size="8" font-weight="bold" fill="#475569">UART0 (256k)</text>
+
+  <!-- 3. Switched Rail: MOSFET Drain -> Radar VCC -->
+  <!-- Starts at MOSFET left edge (305, 292), goes left to x=265, up to y=188, left into Radar (235, 188) -->
+  <path d="M 305 292 L 265 292 L 265 188 L 235 188" stroke="#dc2626" stroke-width="1.6" stroke-dasharray="3,2" fill="none" marker-end="url(#arr-red)"/>
+  <rect x="242" y="235" width="50" height="14" rx="3" fill="#fef2f2" stroke="#fecaca" stroke-width="0.8"/>
+  <text x="267" y="246" text-anchor="middle" font-size="7.8" font-weight="bold" fill="#dc2626">+3V3_SW</text>
+
+  <!-- 4. Shared I2C Bus: SHT40, SCD41, BH1750 -> MCU -->
+  <!-- SHT40: (235, 236) -> trunk at x=252 -->
+  <!-- SCD41: (235, 291) -> trunk at x=252 -->
+  <!-- BH1750: (235, 346) -> trunk at x=252 -->
+  <!-- Trunk goes up to y=205, then right to MCU (305, 205) -->
+  <path d="M 235 346 L 252 346 L 252 205 L 305 205" stroke="#16a34a" stroke-width="1.8" fill="none" marker-end="url(#arr-green)"/>
+  <path d="M 235 291 L 252 291" stroke="#16a34a" stroke-width="1.8" fill="none"/>
+  <path d="M 235 236 L 252 236" stroke="#16a34a" stroke-width="1.8" fill="none"/>
+  <!-- I2C Bus dots -->
+  <circle cx="252" cy="291" r="2.5" fill="#16a34a"/>
+  <circle cx="252" cy="236" r="2.5" fill="#16a34a"/>
+  <rect x="257" y="198" width="42" height="14" rx="3" fill="#f0fdf4" stroke="#bbf7d0" stroke-width="0.8"/>
+  <text x="278" y="209" text-anchor="middle" font-size="8" font-weight="bold" fill="#166534">I²C Bus</text>
+
+  <!-- 5. VBAT Divider -> MCU ADC1 CH0 -->
+  <!-- Starts at (235, 401), goes right to x=280, up to y=225, right into MCU (305, 225) -->
+  <path d="M 235 401 L 280 401 L 280 225 L 305 225" stroke="#d97706" stroke-width="1.5" fill="none" marker-end="url(#arr-amber)"/>
+  <rect x="244" y="375" width="48" height="14" rx="3" fill="#fefce8" stroke="#fde047" stroke-width="0.8"/>
+  <text x="268" y="386" text-anchor="middle" font-size="7.8" font-weight="bold" fill="#854d0e">ADC1 CH0</text>
+
+  <!-- 6. MCU GPIO21 -> MOSFET Gate -->
+  <!-- From MCU bottom at (380, 240) straight down to MOSFET top at (380, 260) -->
+  <path d="M 380 240 L 380 260" stroke="#dc2626" stroke-width="1.6" fill="none" marker-end="url(#arr-red)"/>
+  <rect x="335" y="243" width="90" height="14" rx="3" fill="#fef2f2" stroke="#fecaca" stroke-width="0.8"/>
+  <text x="380" y="254" text-anchor="middle" font-size="8" font-weight="bold" fill="#b91c1c">GPIO21 (RAIL_EN)</text>
+
+  <!-- 7. MCU I2C -> OLED -->
+  <!-- From MCU bottom at (545, 240) straight down to OLED top at (545, 260) -->
+  <path d="M 545 240 L 545 260" stroke="#0284c7" stroke-width="1.6" fill="none" marker-end="url(#arr-blue)"/>
+  <rect x="515" y="243" width="60" height="14" rx="3" fill="#f0f9ff" stroke="#bae6fd" stroke-width="0.8"/>
+  <text x="545" y="254" text-anchor="middle" font-size="8" font-weight="bold" fill="#0369a1">I²C (0x3C)</text>
+
+  <!-- 8. MCU <-> RTC Slow Memory -->
+  <!-- From MCU bottom at (330, 240) down to RTC top at (330, 340) -->
+  <path d="M 330 240 L 330 255 L 298 255 L 298 365 L 305 365" stroke="#9333ea" stroke-width="1.3" stroke-dasharray="2,2" fill="none" marker-end="url(#arr-purple)"/>
+  <rect x="270" y="325" width="56" height="14" rx="3" fill="#faf5ff" stroke="#e9d5ff" stroke-width="0.8"/>
+  <text x="298" y="335" text-anchor="middle" font-size="7.5" font-weight="bold" fill="#7e22ce">RTC Fast Bus</text>
+
+  <!-- ==================== COLUMN 2 TO COLUMN 3: WIRELESS THREAD MESH ==================== -->
+  <!-- From XIAO ESP32-C6 right edge (625, 134) to ESP32-C6 RCP left edge (725, 134) -->
+  <path d="M 625 128 L 725 128" stroke="#7c3aed" stroke-width="2.2" fill="none" marker-end="url(#arr-purple)"/>
+  <path d="M 725 140 L 625 140" stroke="#7c3aed" stroke-width="2.2" stroke-dasharray="3,2" fill="none" marker-end="url(#arr-purple)"/>
+  
+  <!-- Thread Mesh Badge floating between boards -->
+  <rect x="635" y="105" width="80" height="20" rx="4" fill="#7c3aed" stroke="#6d28d9" stroke-width="1"/>
+  <text x="675" y="119" text-anchor="middle" font-size="8.5" font-weight="bold" fill="#ffffff">Thread Mesh</text>
+  <text x="675" y="153" text-anchor="middle" font-size="7.5" font-weight="bold" fill="#6b21a8">802.15.4 Ch 15</text>
+  <!-- Radio wave symbols -->
+  <path d="M 632 125 A 8 8 0 0 1 632 143" stroke="#7c3aed" stroke-width="1.5" fill="none"/>
+  <path d="M 718 125 A 8 8 0 0 0 718 143" stroke="#7c3aed" stroke-width="1.5" fill="none"/>
+
+  <!-- ==================== COLUMN 3 INTERNAL CONNECTIONS ==================== -->
+  <!-- ESP32-C6 RCP -> Raspberry Pi 3B (Spinel over USB) -->
+  <!-- From (835, 168) straight down to (835, 205) -->
+  <path d="M 830 168 L 830 205" stroke="#059669" stroke-width="2.2" fill="none" marker-end="url(#arr-emerald)"/>
+  <path d="M 840 205 L 840 168" stroke="#059669" stroke-width="1.8" stroke-dasharray="2,2" fill="none" marker-end="url(#arr-emerald)"/>
+  <rect x="755" y="177" width="160" height="18" rx="4" fill="#ecfdf5" stroke="#a7f3d0" stroke-width="1"/>
+  <text x="835" y="190" text-anchor="middle" font-size="8.5" font-weight="bold" fill="#047857">USB Spinel (/dev/ttyACM0)</text>
+
+  <!-- Raspberry Pi 3B -> Matter Live Entities -->
+  <!-- From (835, 290) straight down to (835, 325) -->
+  <path d="M 835 290 L 835 325" stroke="#059669" stroke-width="2" fill="none" marker-end="url(#arr-emerald)"/>
+  <rect x="770" y="299" width="130" height="16" rx="3" fill="#ffffff" stroke="#a7f3d0" stroke-width="0.9"/>
+  <text x="835" y="311" text-anchor="middle" font-size="8" font-weight="bold" fill="#065f46">Matter Cluster Updates</text>
+
+</svg>

@@ -10,10 +10,6 @@ occupied. A local OLED shows the current readings without needing a phone.
 The design target is a device that spends almost all of its life in deep sleep, drawing single-digit
 microamps, and wakes instantly when someone walks in.
 
-> **Status:** Integrated firmware running. Matter commissioned against Home Assistant.
-> Altium 4-layer carrier board design and manufacturing outputs complete.
-> Enclosure 3D modeling in progress. See [docs/DELIVERY_CHECKLIST.md](docs/DELIVERY_CHECKLIST.md) for the schedule.
-
 ---
 
 ## Hardware
@@ -51,8 +47,8 @@ OmniSensor/
 │  ├─ altium/               # Altium Designer project files (.PrjPcb, .SchDoc, .PcbDoc, .OutJob)
 │  ├─ datasheets/           # component reference sheets
 │  └─ outputs/              # Gerbers, NC drill, BOM CSV, 3D STEP, schematic PDF
-├─ enclosure/               # 3D-printable case (CAD sources + STLs)
-└─ docs/                    # software architecture, hardware design, delivery schedule
+├─ enclosure/               # 3D-printable enclosure specification and module dimensions
+└─ docs/                    # technical delivery report, software architecture, hardware design
 ```
 
 ## Quick start
@@ -74,10 +70,10 @@ Start with `sht40` if you just want to confirm your toolchain and wiring work.
 
 | Document | Contents |
 |---|---|
+| [docs/DELIVERY_REPORT.pdf](docs/DELIVERY_REPORT.pdf) ([Typst](docs/DELIVERY_REPORT.typ)) | **Final Delivery & Technical Engineering Report** (architecture, PCB, firmware, testbed, power calculations) |
 | [project_description.md](project_description.md) | Full technical description: architecture, BOM, pin map, power budget, Matter mapping |
 | [docs/SOFTWARE_DESIGN.md](docs/SOFTWARE_DESIGN.md) | Firmware architecture, concurrency, presence/sensor subsystems, Matter model, and setup guide |
-| [docs/HARDWARE_DESIGN.md](docs/HARDWARE_DESIGN.md) | Power management, load switching, battery sensing, PCB and enclosure design |
-| [docs/DELIVERY_CHECKLIST.md](docs/DELIVERY_CHECKLIST.md) | Project schedule, scope, milestones and delivery plan |
+| [docs/HARDWARE_DESIGN.md](docs/HARDWARE_DESIGN.md) | Power management, load switching, battery sensing, PCB design and layout |
 
 ## References
 

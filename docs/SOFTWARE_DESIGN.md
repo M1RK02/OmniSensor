@@ -200,7 +200,7 @@ The XIAO's built-in BOOT button handles dual roles:
 
 ## 8. Standalone Validation Suite (`firmware/examples/`)
 
-During Milestone 1, each sensor driver was developed and verified in isolation under `firmware/examples/` before being integrated into `firmware/hub/`. Every example is a self-contained ESP-IDF project:
+During initial sensor bring-up, each sensor driver was developed and verified in isolation under `firmware/examples/` before being integrated into `firmware/hub/`. Every example is a self-contained ESP-IDF project:
 
 | Example Project | Focus & Validation Criteria |
 |---|---|
@@ -280,6 +280,6 @@ idf.py build flash monitor
 ```
 
 ### 6. Matter Commissioning (Home Assistant / Apple Home)
-1. Ensure your local network has an active **Thread Border Router** (e.g. Home Assistant Yellow/SkyConnect, Apple TV 4K, HomePod mini).
+1. Ensure your local network has an active **Thread Border Router** (e.g. Raspberry Pi 3B running Home Assistant with an ESP32-C6 OTBR RCP, Home Assistant Yellow/SkyConnect, Apple TV 4K, HomePod mini).
 2. Run `idf.py monitor` on the hub firmware. The console will display the Matter QR-code link and manual pairing code.
 3. In Home Assistant, navigate to **Settings → Devices & Services → Add Integration → Matter (Thread)**, scan the QR code, and complete commissioning.

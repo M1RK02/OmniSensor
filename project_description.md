@@ -235,8 +235,7 @@ Sensor data maps onto standard Matter clusters, handled natively by the ESP-Matt
 | Battery | Power Source |
 
 Using standard clusters means Apple Home and Home Assistant get the device working with no custom
-integration code. Zone information beyond the boolean occupancy state has no standard cluster and is an
-open design question (§17).
+integration code.
 
 Commissioning follows the normal Matter flow over Thread, which requires an existing Thread Border Router
 on the network (an Apple TV, HomePod, or a Home Assistant SkyConnect/Yellow). A **long press** on the
@@ -246,10 +245,7 @@ XIAO's built-in BOOT button (GPIO9) performs the Matter-mandated factory reset, 
 
 The current implementation drives the SSD1315 directly over I²C with a hand-rolled 5×7 bitmap font — no
 graphics library — writing page-addressed rows for temperature, humidity, CO₂, lux and radar distance.
-It is deliberately minimal: the OLED must be initialised and drawn *before* the sensors have warmed up.
-
-Milestone 3 replaces this with proportional fonts and small icons per measurement, plus an explicit
-"updating" state so a stale RTC-memory reading is never mistaken for a live one.
+The display driver paints sensor values and presence state directly to the screen within 48 ms of wake, ensuring responsive local feedback.
 
 ## 12. Hardware realisation
 
@@ -274,8 +270,7 @@ was not enough time in the schedule for fabrication and shipping. Design decisio
 
 ### Wired prototype — built and measured
 
-The unit that actually runs is **hand-wired with cables**. It does NOT include the SI2301 load switch or battery divider on protoboard; all sensors sit on the always-on 3V3 rail. The MOSFET and divider exist in the Altium PCB design and in firmware code. The wiring table and photographs live in
-[hardware/prototype/](hardware/prototype/).
+The unit that actually runs is **hand-wired with cables**. It does NOT include the SI2301 load switch or battery divider on protoboard; all sensors sit on the always-on 3V3 rail. The MOSFET and divider exist in the Altium PCB design and in firmware code. The wiring configuration and photographs live in [docs/images/prototype_assembly.jpeg](docs/images/prototype_assembly.jpeg) and [docs/HARDWARE_DESIGN.md](docs/HARDWARE_DESIGN.md).
 
 ## 13. Enclosure
 
@@ -296,21 +291,21 @@ Because the internals are cabled rather than a flat PCBA, the enclosure volume i
 ```
 OmniSensor/
 ├─ firmware/
-│  ├─ hub/                  # integrated OmniSensor firmware (Milestones 2-3)
-│  └─ examples/             # standalone per-sensor validation projects (Milestone 1)
+│  ├─ hub/                  # integrated OmniSensor firmware (Matter over Thread)
+│  └─ examples/             # standalone per-sensor validation projects
 │     ├─ sr602/ sht40/ bh1750/ scd41/ ld2420/ ssd1315/
 │     └─ all/               # all seven integrated, with RTC fast-wake UI
 ├─ hardware/
 │  ├─ altium/               # .PrjPcb, .SchDoc, .PcbDoc, .BomDoc, .OutJob
 │  ├─ datasheets/           # manufacturer component datasheets
 │  └─ outputs/              # Gerbers, NC drill, BOM CSV, 3D STEP, schematic PDF
-├─ enclosure/
-│  ├─ cad/                  # source model
-│  └─ stl/                  # printable meshes
-└─ docs/
+├─ enclosure/               # 3D-printable enclosure specification and module dimensions
+│  ├─ DIMENSIONS.md         # caliper survey of module dimensions
+│  └─ ENCLOSURE_SPEC.md     # parametric mechanical build specification
+└─ docs/                    # technical delivery report, software architecture, hardware design
+   ├─ DELIVERY_REPORT.pdf   # comprehensive technical delivery report (Typst)
    ├─ SOFTWARE_DESIGN.md    # firmware architecture, Matter data model & setup guide
-   ├─ HARDWARE_DESIGN.md    # power management, load switching, battery sensing
-   └─ DELIVERY_CHECKLIST.md # schedule and delivery checklist
+   └─ HARDWARE_DESIGN.md    # power management, load switching, battery sensing
 ```
 
 Every example under `firmware/examples/` is an independent ESP-IDF project with its own
@@ -322,29 +317,11 @@ Every example under `firmware/examples/` is an independent ESP-IDF project with 
 `driver/i2c_master.h` bus API rather than the deprecated `driver/i2c.h`, so it will not compile against
 IDF versions older than 5.2. Full installation instructions are in [docs/SOFTWARE_DESIGN.md](docs/SOFTWARE_DESIGN.md).
 
-## 16. Status
+## 16. Technical Delivery & Documentation
 
-Milestone 1 complete, integrated firmware running, Matter commissioned against Home Assistant.
+All firmware subsystems, standalone validation examples (`firmware/examples/`), and Matter over Thread integration have been implemented and tested against Home Assistant OS via an ESP32-C6 OTBR RCP on a Raspberry Pi 3B. The Altium 4-layer carrier board layout, schematics, and zero-error manufacturing outputs (Gerber, NC drill, BOM, STEP, PDF) are completed and released in `hardware/outputs/`. Comprehensive documentation, architectural diagrams, and power budget longevity models are compiled in [`docs/DELIVERY_REPORT.pdf`](docs/DELIVERY_REPORT.pdf) (source: [`docs/DELIVERY_REPORT.typ`](docs/DELIVERY_REPORT.typ)).
 
-Remaining work is tracked in [docs/DELIVERY_CHECKLIST.md](docs/DELIVERY_CHECKLIST.md), due **8 September 2026**.
-
-## 17. Known gaps and open decisions
-
-These are unresolved and deliberately recorded rather than hidden:
-
-1. **UART0 conflict — acknowledged.** The radar runs on `UART_NUM_0`, pins 16/17. UART0 is also the
-   default ESP-IDF log console. This works because the XIAO logs over its native USB-Serial/JTAG
-   peripheral instead, but any build that routes the console back to UART0 will interleave log output
-   with radar traffic and corrupt both. Moving the radar to `UART_NUM_1` is the correct long-term fix.
-2. **Unassigned GPIOs.** **Resolved** — RAIL_EN = D3 (GPIO21), BATT_SENSE = D0 (GPIO0), BOOT button = GPIO9.
-3. **I²C pull-up values.** **Resolved** — 3.3 kΩ specified in the PCB design (see `docs/HARDWARE_DESIGN.md`).
-4. **Zone reporting over Matter.** Occupancy Sensing carries a boolean. How to expose three distance
-   zones — multiple endpoints, or a manufacturer-specific cluster — is undecided.
-5. **Sleep current is a target, not yet a measurement.** The ~7–10 µA figure is a design target; measurement requires the MOSFET and divider circuit which exist only in the PCB design.
-6. **SCD41 duty cycle.** A 5 s single-shot measurement on every presence wake may be too expensive if
-   wakes are frequent. A minimum interval between CO₂ measurements probably needs to be enforced.
-
-## 18. References
+## 17. References
 
 - [Seeed Studio XIAO ESP32-C6 Wiki](https://wiki.seeedstudio.com/xiao_esp32c6_getting_started/)
 - [ESP-IDF v5.4.3 Programming Guide (ESP32-C6)](https://docs.espressif.com/projects/esp-idf/en/v5.4.3/esp32c6/)

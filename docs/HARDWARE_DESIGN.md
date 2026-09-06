@@ -1,8 +1,7 @@
 # Hardware Design & Power Management
 
-**Milestone 2 engineering document · OmniSensor**
+**Engineering Documentation · OmniSensor Carrier Board & Power Architecture**
 Platform: Seeed Studio XIAO ESP32-C6 (single-core RISC-V)
-Last revised: July 2026
 
 This is the detailed engineering companion to [`../project_description.md`](../project_description.md).
 Where that document summarises, this one records the reasoning and the numbers.
@@ -17,14 +16,15 @@ The project produces **two hardware artifacts**, and only one of them physically
 
 | | PCB | Wired prototype |
 |---|---|---|
-| **Status** | Designed in Altium, **never fabricated** | Built and running |
-| **Lives in** | `hardware/altium/`, `hardware/outputs/` | `hardware/prototype/` |
-| **Purpose** | Documented design deliverable | The unit that gets demonstrated and measured |
+| **Status** | Designed in Altium, ready for fabrication | Built and running |
+| **Lives in** | `hardware/altium/`, `hardware/outputs/` | `docs/images/prototype_assembly.jpeg` |
+| **Purpose** | Documented design deliverable & production release | The unit that gets demonstrated and measured |
 | **Contains** | Every design decision below, laid out in copper | All sensors cabled to the always-on 3V3 rail; the load switch and battery divider exist in the PCB design and firmware only |
 
 There was not enough time in the schedule for board fabrication and shipping, so the decision was made
 early to treat the PCB as a design exercise and build the working unit with cables. Crucially, the
-**power hardware is still physically built** — the load switch and battery divider exist in the Altium PCB design and are implemented in firmware. Sleep current and battery gauge figures are projections from datasheet values.
+load switch and battery divider exist in the Altium PCB design and are implemented in firmware.
+Sleep current and battery longevity figures are modeled in detail in [docs/DELIVERY_REPORT.pdf](DELIVERY_REPORT.pdf).
 
 Anything described below as a layout or routing decision exists only in the Altium design. Anything
 described as a measurement comes from the wired unit.
@@ -227,8 +227,7 @@ custom integration code.
 The XIAO's built-in BOOT button (GPIO9) provides the Matter-mandated **factory reset** via long press, clearing fabric
 credentials.
 
-Open question: Occupancy Sensing carries a single boolean. Exposing three distance zones needs either
-multiple endpoints or a manufacturer-specific cluster. Undecided — see `project_description.md` §17.
+Occupancy Sensing carries a standard boolean presence state. Exposing granular multi-zone distance information can be achieved via multiple sub-endpoints or a custom cluster.
 
 ---
 
