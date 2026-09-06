@@ -299,9 +299,9 @@ OmniSensor/
 │  ├─ altium/               # .PrjPcb, .SchDoc, .PcbDoc, .BomDoc, .OutJob
 │  ├─ datasheets/           # manufacturer component datasheets
 │  └─ outputs/              # Gerbers, NC drill, BOM CSV, 3D STEP, schematic PDF
-├─ enclosure/               # 3D-printable enclosure specification and module dimensions
-│  ├─ DIMENSIONS.md         # caliper survey of module dimensions
-│  └─ ENCLOSURE_SPEC.md     # parametric mechanical build specification
+├─ enclosure/               # 3D-printable enclosure CAD source and printable meshes
+│  ├─ cad/                  # Autodesk Fusion archive (.f3d) and universal STEP (.step)
+│  └─ stl/                  # sliced/printable STL meshes (front_shell.stl, rear_shell.stl)
 └─ docs/                    # technical delivery report, software architecture, hardware design
    ├─ DELIVERY_REPORT.pdf   # comprehensive technical delivery report (Typst)
    ├─ SOFTWARE_DESIGN.md    # firmware architecture, Matter data model & setup guide

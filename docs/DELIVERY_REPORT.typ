@@ -285,7 +285,7 @@ $ "Battery Lifetime" = frac(C_"usable", Q_"total") = frac(1200 "mAh", 17.82 "mAh
 
 = Physical Integration and 3D Enclosure
 
-Per the mechanical specification in `enclosure/ENCLOSURE_SPEC.md`, a two-piece clamshell enclosure was designed:
+A custom parametric two-piece clamshell enclosure was modeled in Autodesk Fusion (native archive and STEP models archived in `enclosure/cad/`, ready-to-slice STLs in `enclosure/stl/`):
 - *PIR Optics:* The SR602 pyroelectric element requires an exact 10.0 mm distance from its Fresnel dome. The top shell integrates an annular collar that aligns and secures the lens at $10.0 "mm"$.
 - *Radar Beam Transparency:* The 24 GHz FMCW radar antenna requires an unobstructed RF path. The front wall of the enclosure facing the LD2420 is thinned to 0.8 mm (radio-transparent PLA), with metallic mounting screws strictly kept outside the beam path.
 - *Louvered Vents:* Slanted louvers directly above the SCD41 provide ambient airflow exchange while blocking direct overhead light and protecting internal electronics.
@@ -293,8 +293,14 @@ Per the mechanical specification in `enclosure/ENCLOSURE_SPEC.md`, a two-piece c
 - *Fabrication Parameters:* Sliced for an Anycubic Kobra 3 V2 (0.4 mm nozzle, 0.20 mm layer height, 100% infill around mounting lugs, $0.20 "mm"$ XY hole compensation).
 
 #figure(
-  image("images/enclosure_assembly.png", width: 68%),
-  caption: [3D-printed two-piece clamshell enclosure assembly (Anycubic Kobra 3 V2, PLA), illustrating the 10.0 mm PIR Fresnel lens collar, 0.8 mm radio-transparent radar aperture, louvered SCD41 acoustic air vents, and OLED window.],
+  grid(
+    columns: (1fr, 1fr),
+    gutter: 12pt,
+    align: horizon,
+    image("images/fusion_render.png", width: 100%),
+    image("images/enclosure_assembly.png", width: 100%),
+  ),
+  caption: [OmniSensor enclosure: *(left)* Autodesk Fusion 3D parametric CAD render highlighting the OLED window, PIR aperture, and air vents; *(right)* physical unit evaluation (placeholder for tomorrow's post-print assembly photograph).],
 )
 
 = Conclusion and Future Work
