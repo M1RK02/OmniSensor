@@ -300,7 +300,7 @@ A custom parametric two-piece clamshell enclosure was modeled in Autodesk Fusion
     image("images/fusion_render.png", width: 100%),
     image("images/enclosure_assembly.png", width: 100%),
   ),
-  caption: [OmniSensor enclosure: *(left)* Autodesk Fusion 3D parametric CAD render highlighting the OLED window, PIR aperture, and air vents; *(right)* physical unit evaluation (placeholder for tomorrow's post-print assembly photograph).],
+  caption: [OmniSensor enclosure: *(left)* Autodesk Fusion 3D parametric CAD render highlighting the OLED window, PIR aperture, and air vents; *(right)* fully fabricated, 3D-printed, and assembled physical unit (Anycubic Kobra 3 V2, PLA) displaying live telemetry on the SSD1315 OLED.],
 )
 
 = Conclusion and Future Work

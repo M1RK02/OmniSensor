@@ -46,8 +46,9 @@ OmniSensor/
 ├─ hardware/
 │  ├─ altium/               # Altium Designer project files (.PrjPcb, .SchDoc, .PcbDoc, .OutJob)
 │  ├─ datasheets/           # component reference sheets
-│  └─ outputs/              # Gerbers, NC drill, BOM CSV, 3D STEP, schematic PDF
-├─ enclosure/               # 3D-printable enclosure specification and module dimensions
+├─ enclosure/               # 3D-printable enclosure CAD source and printable meshes
+│  ├─ cad/                  # Autodesk Fusion archive (.f3d) and universal STEP (.step)
+│  └─ stl/                  # sliced/printable STL meshes (front_shell.stl, rear_shell.stl)
 └─ docs/                    # technical delivery report, software architecture, hardware design
 ```
 
